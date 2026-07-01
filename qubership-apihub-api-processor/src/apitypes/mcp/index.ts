@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-import { buildUnknownDocument, dumpUnknownDocument } from './unknown.document'
-import { UNKNOWN_API_TYPE } from './unknown.consts'
-import { parseUnknownFile } from './unknown.parser'
 import { ApiBuilder } from '../../types'
-import { DOCUMENT_TYPE } from '../../consts'
+import { MCP_DOCUMENT_TYPE } from './mcp.consts'
+import { MCP_API_TYPE } from '../../consts'
+import { parseMcpFile } from './mcp.parser'
+import { buildMcpDocument, dumpMcpDocument } from './mcp.document'
+import { buildMcpEntities } from './mcp.entities'
+import { ParsedMcpData } from './mcp.types'
 
-export * from './unknown.consts'
-export { buildBinaryDocument } from './unknown.document'
+export * from './mcp.consts'
+export * from './mcp.entities'
+export * from './mcp.parser'
+export * from './mcp.types'
 
-export const unknownApiBuilder: ApiBuilder<unknown> = {
-  apiType: UNKNOWN_API_TYPE,
-  types: [DOCUMENT_TYPE.JSON, DOCUMENT_TYPE.YAML, DOCUMENT_TYPE.UNKNOWN],
-  parser: parseUnknownFile,
-  buildDocument: buildUnknownDocument,
-  dumpDocument: dumpUnknownDocument,
+export const mcpBuilder: ApiBuilder<ParsedMcpData> = {
+  apiType: MCP_API_TYPE,
+  types: Object.values(MCP_DOCUMENT_TYPE),
+  parser: parseMcpFile,
+  buildDocument: buildMcpDocument,
+  dumpDocument: dumpMcpDocument,
+  buildMcpEntities,
 }
