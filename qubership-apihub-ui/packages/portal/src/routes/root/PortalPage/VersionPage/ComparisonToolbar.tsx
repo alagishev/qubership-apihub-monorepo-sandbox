@@ -1,0 +1,274 @@
+/**
+ * Copyright 2024-2025 NetCracker Technology Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { useBackwardLocationContext } from '@apihub/routes/BackwardLocationProvider'
+import { isLinkedComparedBreadcrumbPathItem } from '@apihub/routes/root/PortalPage/VersionPage/breadcrumbs'
+import { ExportChangesMenu } from '@apihub/routes/root/PortalPage/VersionPage/ExportChangesMenu'
+import {
+  COMPARE_DASHBOARDS_MODE,
+  COMPARE_DIFFERENT_OPERATIONS_MODE,
+  COMPARE_PACKAGES_MODE,
+  COMPARE_SAME_OPERATIONS_MODE,
+} from '@apihub/routes/root/PortalPage/VersionPage/OperationContent/OperationView/OperationDisplayMode'
+import { useApiTypeSearchParam } from '@apihub/routes/root/PortalPage/VersionPage/useApiTypeSearchParam'
+import { useDownloadChangesAsExcel } from '@apihub/routes/root/PortalPage/VersionPage/useDownloadChangesAsExcel'
+import { useTagSearchFilter } from '@apihub/routes/root/PortalPage/VersionPage/useTagSearchFilter'
+import { useVersionSearchParam } from '@apihub/routes/root/useVersionSearchParam'
+import { isApiTypeSelectorShown } from '@apihub/utils/operation-types'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { Box, IconButton, Typography } from '@mui/material'
+import type { ChangesTooltipCategory } from '@netcracker/qubership-apihub-ui-shared/components/ChangesTooltip'
+import { CATEGORY_OPERATION, CATEGORY_PACKAGE } from '@netcracker/qubership-apihub-ui-shared/components/ChangesTooltip'
+import type { ApiType } from '@netcracker/qubership-apihub-ui-shared/entities/api-types'
+import { isApiType } from '@netcracker/qubership-apihub-ui-shared/entities/api-types'
+import { CHANGE_SEVERITIES } from '@netcracker/qubership-apihub-ui-shared/entities/change-severities'
+import { getRouteApiTypeTitle } from '@netcracker/qubership-apihub-ui-shared/entities/contract-types'
+import { DEFAULT_API_TYPE } from '@netcracker/qubership-apihub-ui-shared/entities/operations'
+import type { Key } from '@netcracker/qubership-apihub-ui-shared/entities/keys'
+import {
+  DEFAULT_VIEW_MODE_MAP_BY_API_TYPE,
+  OPERATION_COMPARE_VIEW_MODES,
+  RAW_OPERATION_VIEW_MODE,
+} from '@netcracker/qubership-apihub-ui-shared/entities/operation-view-mode'
+import type { VersionChanges } from '@netcracker/qubership-apihub-ui-shared/entities/version-changelog'
+import { isDashboardComparisonSummary } from '@netcracker/qubership-apihub-ui-shared/entities/version-changes-summary'
+import {
+  useSeverityFiltersSearchParam,
+} from '@netcracker/qubership-apihub-ui-shared/hooks/change-severities/useSeverityFiltersSearchParam'
+import {
+  usePackageSearchParam,
+} from '@netcracker/qubership-apihub-ui-shared/hooks/routes/package/usePackageSearchParam'
+import type { FC } from 'react'
+import { memo, useCallback, useMemo } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { getOverviewPath } from '../../../NavigationProvider'
+import { ComparedPackagesBreadcrumbs } from '../../ComparedPackagesBreadcrumbs'
+import { useIsPackageFromDashboard } from '../useIsPackageFromDashboard'
+import { useChangesLoadingStatus } from './ChangesLoadingStatusProvider'
+import { useChangesSummaryFromContext } from './ChangesSummaryProvider'
+import { useBreadcrumbsData } from './ComparedPackagesBreadcrumbsProvider'
+import { ComparisonChangeSeverityFilters } from './ComparisonChangeSeverityFilters'
+import { ComparisonOperationChangeSeverityFilters } from './ComparisonOperationChangeSeverityFilters'
+import { OperationViewModeSelector } from './OperationViewModeSelector'
+import { PackageSelector } from './PackageSelector'
+import { useOperationViewMode } from './useOperationViewMode'
+import { ApiTypeSegmentedSelector } from './VersionComparePage/ApiTypeSegmentedSelector'
+import { toComparedApiType, toComparedApiTypeFilter } from './VersionComparePage/compareApiTypeFilter'
+
+export type InternalDocumentOptions = {
+  versionChanges: VersionChanges | undefined
+  currentPackageId: Key | undefined
+  currentVersionId: Key | undefined
+  previousPackageId: Key | undefined
+  previousVersionId: Key | undefined
+}
+
+export type ComparisonPageToolbarProps = {
+  compareToolbarMode: CompareToolbarMode
+  internalDocumentOptions?: InternalDocumentOptions
+  isOperationsGroupCompare?: boolean
+}
+
+export const ComparisonToolbar: FC<ComparisonPageToolbarProps> = memo<ComparisonPageToolbarProps>((props) => {
+  const { compareToolbarMode, internalDocumentOptions, isOperationsGroupCompare = false } = props
+  const { apiType: apiTypeSearchParam } = useApiTypeSearchParam()
+  const [packageSearchParam] = usePackageSearchParam()// in case of package/dashboard comparison we don't hase apiType in url, we have it in searchParams
+  const {
+    packageId: mainPackageId,
+    versionId: mainVersionId,
+    group,
+    apiType: operationApiTypeInUrl,
+  } = useParams<{
+    packageId: Key
+    versionId: Key
+    group: Key
+    apiType: ApiType
+  }>()
+  const apiTypeFromUrl = operationApiTypeInUrl ?? apiTypeSearchParam
+  const operationsApiType: ApiType = isApiType(apiTypeFromUrl) ? apiTypeFromUrl : DEFAULT_API_TYPE
+  const comparedApiTypeFilter = toComparedApiTypeFilter(apiTypeFromUrl)
+  const comparedApiType = toComparedApiType(apiTypeFromUrl, DEFAULT_API_TYPE)
+  const previousVersionPackageId = packageSearchParam ?? mainPackageId
+
+  const { isPackageFromDashboard } = useIsPackageFromDashboard(true)
+  const [severityFilter] = useSeverityFiltersSearchParam()
+  const [selectedTag] = useTagSearchFilter()
+  const [previousVersion] = useVersionSearchParam()
+  const [downloadChangesAsExcel] = useDownloadChangesAsExcel()
+
+  const onDownloadAllChanges = useCallback((): void => {
+    downloadChangesAsExcel({
+      packageKey: mainPackageId!,
+      version: mainVersionId!,
+      apiType: apiTypeFromUrl!,
+      previousVersion: previousVersion!,
+      previousVersionPackageId: previousVersionPackageId,
+    })
+  }, [downloadChangesAsExcel, mainPackageId, mainVersionId, apiTypeFromUrl, previousVersion, previousVersionPackageId])
+
+  const navigate = useNavigate()
+  const backwardLocation = useBackwardLocationContext()
+
+  const breadcrumbsContext = useBreadcrumbsData()
+  const commonLinkedBreadcrumbs = breadcrumbsContext?.common.filter(isLinkedComparedBreadcrumbPathItem)
+
+  const isOperationsComparison = [COMPARE_SAME_OPERATIONS_MODE, COMPARE_DIFFERENT_OPERATIONS_MODE].includes(compareToolbarMode)
+  const isPackagesComparison = compareToolbarMode === COMPARE_PACKAGES_MODE
+
+  const defaultViewMode = isApiType(apiTypeFromUrl)
+    ? DEFAULT_VIEW_MODE_MAP_BY_API_TYPE[apiTypeFromUrl](isOperationsComparison)
+    : RAW_OPERATION_VIEW_MODE
+  const { mode } = useOperationViewMode(defaultViewMode)
+
+  const isDashboardsComparison = compareToolbarMode === COMPARE_DASHBOARDS_MODE
+  const changesSummary = useChangesSummaryFromContext()
+  const showApiTypeSelector = useMemo(
+    () => {
+      if (!changesSummary || !isDashboardComparisonSummary(changesSummary)) {
+        return false
+      }
+
+      const allPackagesApiTypes = changesSummary
+        .map(({ operationTypes }) => operationTypes.map(typeSummary => typeSummary.apiType))
+        .flat()
+      const apiTypeSet = new Set(allPackagesApiTypes)
+      return isApiTypeSelectorShown(Array.from(apiTypeSet))
+    },
+    [changesSummary],
+  )
+
+  const handleBackClick = useCallback(() => {
+    let target = getOverviewPath({ packageKey: mainPackageId!, versionKey: mainVersionId! })
+    if (isOperationsComparison) {
+      backwardLocation.fromOperationsComparison && (target = { ...backwardLocation.fromOperationsComparison })
+    } else if (isPackagesComparison) {
+      backwardLocation.fromPackagesComparison && (target = { ...backwardLocation.fromPackagesComparison })
+    } else {
+      backwardLocation.fromDocumentsComparison && (target = { ...backwardLocation.fromDocumentsComparison })
+    }
+    navigate(target)
+  }, [backwardLocation.fromDocumentsComparison, backwardLocation.fromOperationsComparison, backwardLocation.fromPackagesComparison, isOperationsComparison, isPackagesComparison, mainPackageId, mainVersionId, navigate])
+
+  const changesLoadingStatus = useChangesLoadingStatus()
+
+  const title = useMemo(() => (
+    isOperationsComparison
+      ? `${TITLE_BY_COMPARE_MODE[compareToolbarMode]} ${getRouteApiTypeTitle(operationsApiType)}`
+      : group
+        ? COMPARE_API_BY_GROUPS
+        : TITLE_BY_COMPARE_MODE[compareToolbarMode]
+  ), [compareToolbarMode, group, isOperationsComparison, operationsApiType])
+
+  return (
+    <Box sx={COMPARISON_PAGE_TOOLBAR_STYLES} data-testid="ComparisonToolbar">
+      <Box display="flex" flexDirection="column">
+        <Box fontSize="0.875rem">
+          <ComparedPackagesBreadcrumbs data={commonLinkedBreadcrumbs} />
+        </Box>
+        <Box display="flex" alignItems="center">
+          <IconButton color="primary" onClick={handleBackClick} data-testid="BackButton">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography sx={COMPARISON_PAGE_TOOLBAR_TEXT_STYLES}>
+            {title}
+          </Typography>
+          {isPackageFromDashboard && compareToolbarMode !== COMPARE_DIFFERENT_OPERATIONS_MODE && <PackageSelector />}
+        </Box>
+      </Box>
+      <Box sx={COMPARISON_PAGE_TOOLBAR_ACTIONS_STYLES}>
+        {!changesLoadingStatus && (
+          isOperationsComparison
+            ? <>
+              {mode !== RAW_OPERATION_VIEW_MODE && (
+                <ComparisonOperationChangeSeverityFilters
+                  internalDocumentOptions={internalDocumentOptions}
+                  apiType={operationsApiType}
+                />
+              )}
+              <OperationViewModeSelector
+                defaultValue={defaultViewMode}
+                modes={OPERATION_COMPARE_VIEW_MODES.get(operationsApiType)!}
+              />
+            </>
+            : <>
+              <ComparisonChangeSeverityFilters
+                category={getChangeSeverityCategory(isDashboardsComparison, isPackagesComparison)}
+                apiType={comparedApiTypeFilter}
+              />
+              {isDashboardsComparison && showApiTypeSelector && <ApiTypeSegmentedSelector/>}
+            </>
+        )}
+      </Box>
+      {!isOperationsGroupCompare &&
+        <ExportChangesMenu
+          apiType={comparedApiType}
+          severityFilter={severityFilter}
+          severityChanges={CHANGE_SEVERITIES}
+          tag={selectedTag}
+          previousVersion={previousVersion}
+          previousVersionPackageId={previousVersionPackageId}
+          onDownloadAllChanges={onDownloadAllChanges}
+        />
+      }
+    </Box>
+  )
+})
+
+function getChangeSeverityCategory(
+  isDashboardsComparison: boolean,
+  isPackagesComparison: boolean,
+): ChangesTooltipCategory | undefined {
+  if (isDashboardsComparison) return CATEGORY_PACKAGE
+  if (isPackagesComparison) return CATEGORY_OPERATION
+  return undefined
+}
+
+const COMPARISON_PAGE_TOOLBAR_STYLES = {
+  alignItems: 'center',
+  display: 'flex',
+  gap: '8px',
+  height: '72px',
+  pl: 3,
+  pr: 3,
+}
+
+const COMPARISON_PAGE_TOOLBAR_TEXT_STYLES = {
+  fontSize: '18px',
+  fontWeight: '600',
+  lineHeight: '28px',
+  mr: 2,
+}
+
+const COMPARISON_PAGE_TOOLBAR_ACTIONS_STYLES = {
+  display: 'flex',
+  gap: '16px',
+  ml: 'auto',
+}
+
+export type CompareToolbarMode =
+  | typeof COMPARE_SAME_OPERATIONS_MODE
+  | typeof COMPARE_DIFFERENT_OPERATIONS_MODE
+  | typeof COMPARE_PACKAGES_MODE
+  | typeof COMPARE_DASHBOARDS_MODE
+
+const TITLE_BY_COMPARE_MODE = {
+  [COMPARE_SAME_OPERATIONS_MODE]: 'Compare',
+  [COMPARE_DIFFERENT_OPERATIONS_MODE]: 'Compare',
+  [COMPARE_PACKAGES_MODE]: 'Compare Package API',
+  [COMPARE_DASHBOARDS_MODE]: 'Compare Packages',
+}
+
+const COMPARE_API_BY_GROUPS = 'Compare API by Groups'
