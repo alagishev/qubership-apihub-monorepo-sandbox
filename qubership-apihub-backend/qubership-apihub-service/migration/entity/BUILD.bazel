@@ -1,0 +1,13 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "entity",
+    srcs = ["MigrationEntity.go"],
+    importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/migration/entity",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//qubership-apihub-backend/qubership-apihub-service/entity",
+        "//qubership-apihub-backend/qubership-apihub-service/migration/view",
+        "//qubership-apihub-backend/qubership-apihub-service/view",
+    ],
+)

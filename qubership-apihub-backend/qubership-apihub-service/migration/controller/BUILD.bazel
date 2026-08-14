@@ -1,0 +1,16 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "controller",
+    srcs = ["OperationsMigrationController.go"],
+    importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/migration/controller",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//qubership-apihub-backend/qubership-apihub-service/context",
+        "//qubership-apihub-backend/qubership-apihub-service/exception",
+        "//qubership-apihub-backend/qubership-apihub-service/migration/service",
+        "//qubership-apihub-backend/qubership-apihub-service/migration/view",
+        "//qubership-apihub-backend/qubership-apihub-service/utils",
+        "@com_github_gorilla_mux//:go_default_library",
+    ],
+)

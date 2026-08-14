@@ -1,0 +1,11 @@
+docker-compose
+helm-templates
+docs
+agent-packages
+.apm_modules
+apm_modules
+.cursor
+.claude
+.agents
+.qubership
+node_modules

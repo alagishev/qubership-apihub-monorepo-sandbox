@@ -43,6 +43,14 @@ High-level narratives (architecture roadmap, backlog process) evolve on the [Git
 
 ---
 
+## Monorepo build & CI
+
+| Guide | Audience | Scope |
+|-------|----------|-------|
+| [Monorepo build guide](./monorepo-build.md) | Developers | Bazel, pnpm workspace, affected builds, per-module release tags |
+
+---
+
 ## Annotated templates in component repositories
 
 Use these as **copy/paste starting points** (comments describe every knob):

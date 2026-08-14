@@ -1,0 +1,9 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "secctx",
+    srcs = ["security_context.go"],
+    importpath = "github.com/Netcracker/qubership-apihub-agents-backend/secctx",
+    visibility = ["//visibility:public"],
+    deps = ["@com_github_shaj13_go_guardian_v2//auth:go_default_library"],
+)

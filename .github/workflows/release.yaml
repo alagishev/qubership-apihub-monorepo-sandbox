@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "commons-go/v*"
+      - "backend/v*"
+      - "linter/v*"
+      - "agents-backend/v*"
+      - "api-diff/v*"
+      - "api-processor/v*"
+      - "build-task-consumer/v*"
+      - "ui/v*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  parse-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      module_id: ${{ steps.parse.outputs.module_id }}
+      version: ${{ steps.parse.outputs.version }}
+      kind: ${{ steps.parse.outputs.kind }}
+      oci_push: ${{ steps.parse.outputs.oci_push }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: parse
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          MODULE="${TAG%%/*}"
+          VERSION="${TAG#*/}"
+          VERSION="${VERSION#v}"
+          echo "module_id=$MODULE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          pip install pyyaml -q
+          KIND="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['${MODULE}']['kind'])")"
+          echo "kind=$KIND" >> "$GITHUB_OUTPUT"
+          OCI="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['${MODULE}'].get('oci_push',''))")"
+          echo "oci_push=$OCI" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: parse-tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bazel-contrib/setup-bazel@v0.9
+        with:
+          bazelisk-version: 1.x
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.5"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test module
+        run: |
+          MODULE="${{ needs.parse-tag.outputs.module_id }}"
+          TARGET="$(python3 -c "import yaml; m=yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE']; print(m['bazel'])")"
+          bazel test --config=ci "$TARGET"
+
+      - name: Go library release tarball
+        if: needs.parse-tag.outputs.kind == 'go-lib'
+        run: |
+          MODULE="${{ needs.parse-tag.outputs.module_id }}"
+          PATH_DIR="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE']['path'])")"
+          mkdir -p artifacts
+          tar -czf "artifacts/qubership-apihub-${MODULE}-${{ github.ref_name }}.tar.gz" \
+            --exclude='.git' --exclude='bazel-*' -C "$PATH_DIR" .
+
+      - name: Publish npm package
+        if: contains(fromJson('["npm-lib","npm-service","npm-ui"]'), needs.parse-tag.outputs.kind)
+        run: |
+          MODULE="${{ needs.parse-tag.outputs.module_id }}"
+          case "$MODULE" in
+            api-diff) bazel run //qubership-apihub-api-diff:build ;;
+            api-processor) bazel run //qubership-apihub-api-processor:build_vite ;;
+            build-task-consumer) bazel run //qubership-apihub-build-task-consumer:nest_build ;;
+            ui)
+              bazel run //qubership-apihub-ui:build_portal
+              bazel run //qubership-apihub-ui:build_agents
+              ;;
+          esac
+          PATH_DIR="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE']['path'])")"
+          cd "$PATH_DIR"
+          npm publish --access restricted --tag "v${{ needs.parse-tag.outputs.version }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push OCI image
+        if: needs.parse-tag.outputs.oci_push != ''
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bazel oci_push
+        if: needs.parse-tag.outputs.oci_push != ''
+        run: bazel run --config=release "${{ needs.parse-tag.outputs.oci_push }}" -- --tag "v${{ needs.parse-tag.outputs.version }}"
+
+      - name: GitHub Release (go-lib tarball)
+        if: needs.parse-tag.outputs.kind == 'go-lib'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: artifacts/*
+          generate_release_notes: true
+
+      - name: GitHub Release
+        if: needs.parse-tag.outputs.kind != 'go-lib'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true

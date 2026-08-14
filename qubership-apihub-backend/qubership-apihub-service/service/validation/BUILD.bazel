@@ -1,0 +1,19 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "validation",
+    srcs = [
+        "ArchiveValidator.go",
+        "PublishedValidator.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/service/validation",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//qubership-apihub-backend/qubership-apihub-service/archive",
+        "//qubership-apihub-backend/qubership-apihub-service/entity",
+        "//qubership-apihub-backend/qubership-apihub-service/exception",
+        "//qubership-apihub-backend/qubership-apihub-service/repository",
+        "//qubership-apihub-backend/qubership-apihub-service/utils",
+        "//qubership-apihub-backend/qubership-apihub-service/view",
+    ],
+)

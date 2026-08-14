@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "metrics",
+    srcs = [
+        "BusinessMetrics.go",
+        "Metrics.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/metrics",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_prometheus_client_golang//prometheus:go_default_library",
+        "@com_github_prometheus_client_golang//prometheus/promauto:go_default_library",
+    ],
+)

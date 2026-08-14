@@ -1,0 +1,10 @@
+load("@rules_go//go:def.bzl", "go_test")
+
+go_test(
+    name = "tests_test",
+    srcs = ["ValidatePackageOperations_test.go"],
+    deps = [
+        "//qubership-apihub-backend/qubership-apihub-service/utils",
+        "//qubership-apihub-backend/qubership-apihub-service/view",
+    ],
+)

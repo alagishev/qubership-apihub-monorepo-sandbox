@@ -1,0 +1,20 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
+
+go_library(
+    name = "download-linter-tools_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/Netcracker/qubership-api-linter-service/tools/download-linter-tools",
+    visibility = ["//visibility:private"],
+)
+
+go_binary(
+    name = "download-linter-tools",
+    embed = [":download-linter-tools_lib"],
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "download-linter-tools_test",
+    srcs = ["main_test.go"],
+    embed = [":download-linter-tools_lib"],
+)

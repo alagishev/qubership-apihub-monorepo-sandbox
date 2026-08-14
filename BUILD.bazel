@@ -1,0 +1,43 @@
+load("@aspect_rules_js//npm:defs.bzl", "npm_link_all_packages")
+load("@gazelle//:def.bzl", "DEFAULT_LANGUAGES", "gazelle", "gazelle_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "go.work",
+    "pnpm-workspace.yaml",
+    "pnpm-lock.yaml",
+    ".npmrc",
+    "package.json",
+])
+
+npm_link_all_packages(name = "node_modules")
+
+gazelle_binary(
+    name = "gazelle_bin",
+    languages = DEFAULT_LANGUAGES,
+)
+
+gazelle(
+    name = "gazelle",
+    gazelle = ":gazelle_bin",
+    prefix = "github.com/Netcracker/qubership-apihub-commons-go",
+)
+
+gazelle(
+    name = "gazelle-backend",
+    gazelle = ":gazelle_bin",
+    prefix = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service",
+)
+
+gazelle(
+    name = "gazelle-linter",
+    gazelle = ":gazelle_bin",
+    prefix = "github.com/Netcracker/qubership-api-linter-service",
+)
+
+gazelle(
+    name = "gazelle-agents",
+    gazelle = ":gazelle_bin",
+    prefix = "github.com/Netcracker/qubership-apihub-agents-backend",
+)

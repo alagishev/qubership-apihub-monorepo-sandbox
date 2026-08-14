@@ -1,0 +1,105 @@
+modules:
+  commons-go:
+    path: qubership-apihub-commons-go
+    kind: go-lib
+    bazel: //qubership-apihub-commons-go/...
+    release_tag: commons-go/v
+    dependents:
+      - backend
+      - linter
+      - agents-backend
+
+  api-diff:
+    path: qubership-apihub-api-diff
+    kind: npm-lib
+    bazel: //qubership-apihub-api-diff/...
+    release_tag: api-diff/v
+    npm_name: "@netcracker/qubership-apihub-api-diff"
+    dependents:
+      - api-processor
+
+  api-processor:
+    path: qubership-apihub-api-processor
+    kind: npm-lib
+    bazel: //qubership-apihub-api-processor/...
+    release_tag: api-processor/v
+    npm_name: "@netcracker/qubership-apihub-api-processor"
+    dependents:
+      - build-task-consumer
+      - ui
+
+  build-task-consumer:
+    path: qubership-apihub-build-task-consumer
+    kind: npm-service
+    bazel: //qubership-apihub-build-task-consumer/...
+    release_tag: build-task-consumer/v
+    image: ghcr.io/netcracker/qubership-apihub-build-task-consumer
+    oci_push: //qubership-apihub-build-task-consumer:push
+    e2e_profile: compose
+
+  ui:
+    path: qubership-apihub-ui
+    kind: npm-ui
+    bazel: //qubership-apihub-ui/...
+    release_tag: ui/v
+    image: ghcr.io/netcracker/qubership-apihub-ui
+    oci_push: //qubership-apihub-ui:push
+    e2e_profile: compose-playwright
+
+  backend:
+    path: qubership-apihub-backend
+    kind: go-service
+    bazel: //qubership-apihub-backend/...
+    release_tag: backend/v
+    image: ghcr.io/netcracker/qubership-apihub-backend
+    oci_push: //qubership-apihub-backend:push
+    e2e_profile: compose-full
+
+  linter:
+    path: qubership-api-linter-service
+    kind: go-service
+    bazel: //qubership-api-linter-service/...
+    release_tag: linter/v
+    image: ghcr.io/netcracker/qubership-api-linter-service
+    oci_push: //qubership-api-linter-service:push
+    e2e_profile: compose-linter
+
+  agents-backend:
+    path: qubership-apihub-agents-backend
+    kind: go-service
+    bazel: //qubership-apihub-agents-backend/...
+    release_tag: agents-backend/v
+    image: ghcr.io/netcracker/qubership-apihub-agents-backend
+    oci_push: //qubership-apihub-agents-backend:push
+    e2e_profile: kind
+
+e2e_profiles:
+  compose-full:
+    workflow: run-e2e-tests.yml
+    postman_collections: >-
+      ./e2e/1_1_Smoke_Portal.postman_collection.json,
+      ./e2e/1_3_Linter_Portal.postman_collection.json,
+      ./e2e/2_1_Negative_Portal.postman_collection.json,
+      ./e2e/3_1_Stories_Bugs.postman_collection.json,
+      ./e2e/3_2_Stories_Bugs.postman_collection.json,
+      ./e2e/4_Access_control.postman_collection.json
+    playwright: true
+  compose-linter:
+    workflow: run-e2e-tests.yml
+    postman_collections: ./e2e/1_3_Linter_Portal.postman_collection.json
+    playwright: true
+  compose-playwright:
+    workflow: run-e2e-tests.yml
+    postman_collections: false
+    playwright: true
+  compose:
+    workflow: run-e2e-tests.yml
+    postman_collections: false
+    playwright: true
+  kind:
+    workflow: run-e2e-tests-kind.yaml
+    postman_collections: >-
+      ./e2e/1_1_Smoke_Portal.postman_collection.json,
+      ./e2e/1_2_Smoke_Agent.postman_collection.json
+    playwright: false
+    apihub_agent_run: true

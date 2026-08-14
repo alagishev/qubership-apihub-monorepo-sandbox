@@ -1,0 +1,17 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "entity",
+    srcs = [
+        "db_migration.go",
+        "document.go",
+        "lint_result.go",
+        "ruleset.go",
+        "scoring.go",
+        "task.go",
+        "version.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-api-linter-service/entity",
+    visibility = ["//visibility:public"],
+    deps = ["//qubership-api-linter-service/qubership-api-linter-service/view"],
+)

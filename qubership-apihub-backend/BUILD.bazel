@@ -1,0 +1,56 @@
+load("@rules_go//go:def.bzl", "go_library")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+package(default_visibility = ["//visibility:public"])
+
+pkg_tar(
+    name = "binary_tar",
+    srcs = ["//qubership-apihub-backend/qubership-apihub-service:qubership-apihub-service"],
+    mode = "0555",
+    package_dir = "/app/qubership-apihub-service",
+)
+
+pkg_tar(
+    name = "static_tar",
+    srcs = glob(["qubership-apihub-service/static/**"]),
+    mode = "0555",
+    package_dir = "/app/qubership-apihub-service/static",
+    strip_prefix = "qubership-apihub-service/static",
+)
+
+pkg_tar(
+    name = "resources_tar",
+    srcs = glob(["qubership-apihub-service/resources/**"]),
+    mode = "0555",
+    package_dir = "/app/qubership-apihub-service/resources",
+    strip_prefix = "qubership-apihub-service/resources",
+)
+
+pkg_tar(
+    name = "api_docs_tar",
+    srcs = glob(["docs/api/**"]),
+    mode = "0555",
+    package_dir = "/app/qubership-apihub-service/api",
+    strip_prefix = "docs/api",
+)
+
+oci_image(
+    name = "image",
+    base = "@qubership_core_base",
+    tars = [
+        ":binary_tar",
+        ":static_tar",
+        ":resources_tar",
+        ":api_docs_tar",
+    ],
+    workdir = "/app/qubership-apihub-service",
+    entrypoint = ["/app/qubership-apihub-service/qubership-apihub-service"],
+    user = "10001:10001",
+)
+
+oci_push(
+    name = "push",
+    image = ":image",
+    repository = "ghcr.io/netcracker/qubership-apihub-backend",
+)

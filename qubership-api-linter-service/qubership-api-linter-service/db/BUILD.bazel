@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "db",
+    srcs = ["connection_provider.go"],
+    importpath = "github.com/Netcracker/qubership-api-linter-service/db",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//qubership-api-linter-service/qubership-api-linter-service/view",
+        "@com_github_go_pg_pg_v10//:go_default_library",
+    ],
+)

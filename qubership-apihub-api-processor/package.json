@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@asyncapi/parser": "^3.6.0",
-    "@netcracker/qubership-apihub-api-diff": "dev",
+    "@netcracker/qubership-apihub-api-diff": "workspace:*",
     "@netcracker/qubership-apihub-api-unifier": "dev",
     "@netcracker/qubership-apihub-ddlapi": "1.0.0",
     "@netcracker/qubership-apihub-graphapi": "dev",

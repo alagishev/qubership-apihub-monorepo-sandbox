@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths-ignore:
+      - "docs/**"
+      - "helm-templates/**"
+      - "docker-compose/**"
+      - "agent-packages/**"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-affected:
+    runs-on: ubuntu-latest
+    outputs:
+      bazel_targets: ${{ steps.detect.outputs.bazel_targets }}
+      modules: ${{ steps.detect.outputs.modules }}
+      oci_push_targets: ${{ steps.detect.outputs.oci_push_targets }}
+      feature_tag: ${{ steps.detect.outputs.feature_tag }}
+      run_e2e: ${{ steps.detect.outputs.run_e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install bazel-diff
+        run: |
+          curl -fsSL -o /usr/local/bin/bazel-diff \
+            https://github.com/Tinder/bazel-diff/releases/download/7.0.0/bazel-diff-linux-amd64
+          chmod +x /usr/local/bin/bazel-diff
+
+      - name: Detect affected targets
+        id: detect
+        env:
+          FEATURE_TAG: ${{ github.event_name == 'pull_request' && format('pull-{0}-merge', github.event.number) || '' }}
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
+            BASE="$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)"
+          fi
+          JSON="$(bash tools/ci/detect-affected.sh "$BASE" HEAD)"
+          echo "$JSON" | tee affected.json
+          echo "bazel_targets=$(echo "$JSON" | jq -c '.bazel_targets')" >> "$GITHUB_OUTPUT"
+          echo "modules=$(echo "$JSON" | jq -c '.modules')" >> "$GITHUB_OUTPUT"
+          echo "oci_push_targets=$(echo "$JSON" | jq -c '.oci_push_targets')" >> "$GITHUB_OUTPUT"
+          FT="$(bash tools/ci/feature_tag.sh)"
+          echo "feature_tag=$FT" >> "$GITHUB_OUTPUT"
+          MOD_COUNT="$(echo "$JSON" | jq '.modules | length')"
+          if [[ "$MOD_COUNT" -gt 0 ]]; then echo "run_e2e=true" >> "$GITHUB_OUTPUT"; else echo "run_e2e=false" >> "$GITHUB_OUTPUT"; fi
+
+  bazel-test:
+    needs: detect-affected
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bazel-contrib/setup-bazel@v0.9
+        with:
+          bazelisk-version: 1.x
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.5"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run gazelle (Go BUILD sync)
+        run: |
+          bazel run //:gazelle -- update qubership-apihub-commons-go
+          bazel run //:gazelle-backend -- update qubership-apihub-backend/qubership-apihub-service
+          bazel run //:gazelle-linter -- update qubership-api-linter-service/qubership-api-linter-service
+          bazel run //:gazelle-agents -- update qubership-apihub-agents-backend/qubership-apihub-agents-backend
+
+      - name: Bazel test affected targets
+        run: |
+          TARGETS='${{ needs.detect-affected.outputs.bazel_targets }}'
+          bazel test --config=ci --test_output=errors $(echo "$TARGETS" | jq -r '.[]')
+
+  bazel-build-push:
+    needs: [detect-affected, bazel-test]
+    if: needs.detect-affected.outputs.oci_push_targets != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bazel-contrib/setup-bazel@v0.9
+        with:
+          bazelisk-version: 1.x
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.5"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: Install pnpm dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push OCI images
+        env:
+          TAG: ${{ needs.detect-affected.outputs.feature_tag }}
+        run: |
+          TARGETS='${{ needs.detect-affected.outputs.oci_push_targets }}'
+          for target in $(echo "$TARGETS" | jq -r '.[]'); do
+            bazel run --config=ci "$target" -- --tag "$TAG"
+          done
+
+  e2e:
+    needs: [detect-affected, bazel-build-push]
+    if: github.event_name == 'pull_request' && needs.detect-affected.outputs.run_e2e == 'true'
+    uses: netcracker/qubership-apihub-ci/.github/workflows/run-e2e-tests.yml@main
+    with:
+      compose-repository-url: ${{ github.repositoryUrl }}
+      compose-repository-branch: ${{ github.head_ref }}
+      compose-repository-compose-folder: docker-compose/apihub-generic
+      postman-repository-url: ${{ github.repositoryUrl }}
+      postman-repository-branch: ${{ github.head_ref }}
+      postman-collections-list: ./qubership-apihub-postman-collections/e2e/1_1_Smoke_Portal.postman_collection.json,./qubership-apihub-postman-collections/e2e/1_3_Linter_Portal.postman_collection.json
+      apihub-backend-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'backend') && needs.detect-affected.outputs.feature_tag || 'dev' }}
+      apihub-build-task-consumer-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'build-task-consumer') && needs.detect-affected.outputs.feature_tag || 'dev' }}
+      apihub-ui-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'ui') && needs.detect-affected.outputs.feature_tag || 'dev' }}
+      apihub-api-linter-service-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'linter') && needs.detect-affected.outputs.feature_tag || 'dev' }}
+      apihub-agents-backend-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'agents-backend') && needs.detect-affected.outputs.feature_tag || 'dev' }}
+      postman-repository-branch: ${{ github.head_ref }}
+      playwright-repository-branch: ${{ github.head_ref }}
+    secrets:
+      APIHUB_ACCESS_TOKEN: ${{ secrets.APIHUB_ACCESS_TOKEN }}
+      APIHUB_ADMIN_EMAIL: ${{ secrets.APIHUB_ADMIN_EMAIL }}
+      APIHUB_ADMIN_PASSWORD: ${{ secrets.APIHUB_ADMIN_PASSWORD }}
+      JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}

@@ -1,0 +1,27 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "view",
+    srcs = [
+        "agent.go",
+        "api_config.go",
+        "api_key.go",
+        "build.go",
+        "db_credentials.go",
+        "document.go",
+        "namespace_security.go",
+        "operation.go",
+        "package.go",
+        "personal_access_token.go",
+        "security.go",
+        "service.go",
+        "snapshot.go",
+        "spec.go",
+        "system_info.go",
+        "user.go",
+        "version.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-apihub-agents-backend/view",
+    visibility = ["//visibility:public"],
+    deps = ["//qubership-apihub-agents-backend/qubership-apihub-agents-backend/utils"],
+)

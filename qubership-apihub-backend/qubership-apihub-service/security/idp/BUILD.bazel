@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "idp",
+    srcs = [
+        "Config.go",
+        "Manager.go",
+        "Provider.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/security/idp",
+    visibility = ["//visibility:public"],
+)

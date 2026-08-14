@@ -1,0 +1,34 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "scanner",
+    srcs = [
+        "basic_identifier.go",
+        "graphql_identifier.go",
+        "identifier.go",
+        "markdown_identifier.go",
+        "rest_identifier.go",
+        "scanner.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-apihub-commons-go/api-spec-exposer/internal/scanner",
+    visibility = ["//qubership-apihub-commons-go/api-spec-exposer:__subpackages__"],
+    deps = [
+        "//qubership-apihub-commons-go/api-spec-exposer/config",
+        "@com_github_gosimple_slug//:go_default_library",
+        "@in_gopkg_yaml_v3//:go_default_library",
+    ],
+)
+
+go_test(
+    name = "scanner_test",
+    srcs = [
+        "basic_identifier_test.go",
+        "graphql_identifier_test.go",
+        "identifier_test.go",
+        "markdown_identifier_test.go",
+        "rest_identifier_test.go",
+        "scanner_test.go",
+    ],
+    embed = [":scanner"],
+    deps = ["//qubership-apihub-commons-go/api-spec-exposer/config"],
+)

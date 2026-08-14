@@ -1,0 +1,32 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "view",
+    srcs = [
+        "ai_oas_linter.go",
+        "api_key.go",
+        "bulk_validation.go",
+        "db_credentials.go",
+        "document.go",
+        "document_result.go",
+        "jwt_public_key.go",
+        "lint_issues.go",
+        "linter.go",
+        "operation.go",
+        "package.go",
+        "personal_access_token.go",
+        "publish_notification.go",
+        "role.go",
+        "ruleset.go",
+        "scoring.go",
+        "security.go",
+        "spectral_validation.go",
+        "system_info.go",
+        "task.go",
+        "user.go",
+        "vacuum_validation.go",
+        "version.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-api-linter-service/view",
+    visibility = ["//visibility:public"],
+)

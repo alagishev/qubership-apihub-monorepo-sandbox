@@ -1,0 +1,25 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "repository",
+    srcs = [
+        "doc_lint_result.go",
+        "doc_lint_task.go",
+        "lint_result.go",
+        "ruleset.go",
+        "scoring.go",
+        "version_lint_task.go",
+        "version_result.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-api-linter-service/repository",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//qubership-api-linter-service/qubership-api-linter-service/db",
+        "//qubership-api-linter-service/qubership-api-linter-service/entity",
+        "//qubership-api-linter-service/qubership-api-linter-service/exception",
+        "//qubership-api-linter-service/qubership-api-linter-service/secctx",
+        "//qubership-api-linter-service/qubership-api-linter-service/view",
+        "@com_github_go_pg_pg_v10//:go_default_library",
+        "@com_github_sirupsen_logrus//:go_default_library",
+    ],
+)

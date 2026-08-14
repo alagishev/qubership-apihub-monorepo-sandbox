@@ -1,0 +1,68 @@
+name: CI Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      bazel_targets:
+        description: "Bazel targets to test (JSON array or //...)"
+        type: string
+        default: '["//..."]'
+      push_images:
+        description: "Push OCI images after build"
+        type: boolean
+        default: false
+      image_tag:
+        description: "Image tag when push_images is true"
+        type: string
+        default: "manual"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  bazel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: bazel-contrib/setup-bazel@v0.9
+        with:
+          bazelisk-version: 1.x
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.5"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bazel test
+        run: bazel test --config=ci $(echo '${{ inputs.bazel_targets }}' | jq -r '.[]')
+
+      - name: Log in to GHCR
+        if: inputs.push_images
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push all service images
+        if: inputs.push_images
+        run: |
+          bazel run --config=ci //qubership-apihub-backend:push -- --tag "${{ inputs.image_tag }}"
+          bazel run --config=ci //qubership-api-linter-service:push -- --tag "${{ inputs.image_tag }}"
+          bazel run --config=ci //qubership-apihub-agents-backend:push -- --tag "${{ inputs.image_tag }}"
+          bazel run --config=ci //qubership-apihub-build-task-consumer:push -- --tag "${{ inputs.image_tag }}"
+          bazel run --config=ci //qubership-apihub-ui:push -- --tag "${{ inputs.image_tag }}"

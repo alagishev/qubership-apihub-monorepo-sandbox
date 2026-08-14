@@ -2,9 +2,13 @@
 name: MD Link Checker
 
 on:
-  push: null
-  repository_dispatch: null
-  workflow_dispatch: null
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

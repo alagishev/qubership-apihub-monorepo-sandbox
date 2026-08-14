@@ -1,0 +1,70 @@
+load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_test")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "sources",
+    srcs = glob(
+        [
+            "**/*.ts",
+            "**/*.tsx",
+            "**/*.json",
+            "**/*.js",
+            "**/*.mjs",
+            "scripts/**",
+        ],
+        exclude = [
+            "dist/**",
+            "node_modules/**",
+            "coverage/**",
+        ],
+    ),
+)
+
+js_run_binary(
+    name = "build",
+    tool = "//:node_modules/typescript/bin/tsc",
+    args = [
+        "--module",
+        "commonjs",
+        "--outDir",
+        "dist/cjs",
+    ],
+    chdir = package_name(),
+    srcs = [
+        ":sources",
+        "//:node_modules",
+    ],
+    out_dirs = ["dist/cjs"],
+)
+
+js_run_binary(
+    name = "build_vite",
+    tool = "//:node_modules/vite/bin/vite.js",
+    args = ["build"],
+    chdir = package_name(),
+    srcs = [
+        ":sources",
+        ":build",
+        "//:node_modules",
+    ],
+    out_dirs = ["dist/esm"],
+)
+
+js_test(
+    name = "test",
+    chdir = package_name(),
+    command = "node",
+    args = [
+        "../../node_modules/jest/bin/jest.js",
+        "-c",
+        "jest.config.ts",
+        "--verbose",
+        "--maxWorkers",
+        "3",
+    ],
+    data = [
+        ":sources",
+        "//:node_modules",
+    ],
+)

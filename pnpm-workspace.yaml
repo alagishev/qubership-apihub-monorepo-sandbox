@@ -1,0 +1,6 @@
+packages:
+  - qubership-apihub-api-diff
+  - qubership-apihub-api-processor
+  - qubership-apihub-build-task-consumer
+  - qubership-apihub-ui
+  - qubership-apihub-ui/packages/*

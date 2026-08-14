@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "exception",
+    srcs = ["errors.go"],
+    importpath = "github.com/Netcracker/qubership-apihub-agents-backend/exception",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "exception_test",
+    srcs = ["errors_test.go"],
+    embed = [":exception"],
+)

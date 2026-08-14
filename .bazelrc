@@ -1,0 +1,16 @@
+common --enable_bzlmod
+common --incompatible_enable_cc_toolchain_resolution
+startup --output_user_root=C:/tmp/bazel-out
+
+# Go
+common --@rules_go//go/config:pure
+
+# CI profile (activate with --config=ci)
+build:ci --jobs=auto
+build:ci --remote_download_minimal
+test:ci --test_output=errors
+test:ci --test_summary=short
+
+# Release builds
+build:release --stamp
+build:release --workspace_status_command=tools/ci/workspace_status.sh

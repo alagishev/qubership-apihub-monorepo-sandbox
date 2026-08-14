@@ -1,0 +1,13 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "entity",
+    srcs = [
+        "agent.go",
+        "db_migration.go",
+        "namespace_security.go",
+    ],
+    importpath = "github.com/Netcracker/qubership-apihub-agents-backend/entity",
+    visibility = ["//visibility:public"],
+    deps = ["//qubership-apihub-agents-backend/qubership-apihub-agents-backend/view"],
+)

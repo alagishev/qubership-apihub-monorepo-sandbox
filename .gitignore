@@ -16,3 +16,10 @@ apm_modules/
 
 # APM pack build artifacts
 agent-packages/**/build/
+
+# Bazel
+/bazel-*
+/.cache/bazel
+
+# pnpm / node at repo root
+/node_modules

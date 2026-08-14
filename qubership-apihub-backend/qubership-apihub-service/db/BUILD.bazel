@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "db",
+    srcs = ["ConnectionProvider.go"],
+    importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/db",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//qubership-apihub-backend/qubership-apihub-service/view",
+        "@com_github_go_pg_pg_v10//:go_default_library",
+    ],
+)

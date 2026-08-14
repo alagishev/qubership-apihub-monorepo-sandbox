@@ -1,0 +1,14 @@
+name: Check Go Modules Licenses
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-license:
+    uses: netcracker/qubership-workflow-hub/.github/workflows/go-check-license.yaml@v1.0.5
