@@ -8,6 +8,13 @@ on:
       - "qubership-apihub-ui/**"
   delete: {}
 
+permissions:
+  contents: write
+  packages: read
+
 jobs:
   call-storybook-cd-workflow:
     uses: netcracker/qubership-apihub-ci/.github/workflows/storybook-cd.yaml@main
+    permissions:
+      contents: write
+      packages: read
