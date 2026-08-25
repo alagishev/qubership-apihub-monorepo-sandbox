@@ -10,6 +10,13 @@ import (
 	"github.com/Netcracker/qubership-apihub-commons-go/api-spec-exposer/config"
 )
 
+const (
+	restSingleSpecPath      = "/v3/api-docs"
+	restMultiSpecPathPrefix = "/v3/api-docs/%s"
+	restSwaggerConfigPath   = "/v3/api-docs/swagger-config"
+	restApihubConfigPath    = "/v3/api-docs/apihub-swagger-config"
+)
+
 // Generator generates endpoint configurations (@config.EndpointConfig) based on discovered specs
 type Generator struct {
 	specs       []config.SpecMetadata
@@ -125,14 +132,14 @@ func (g *Generator) generateRestEndpoints(specs []config.SpecMetadata, specMap m
 
 	if len(specs) == 1 {
 		spec := specs[0]
-		specMap["/v3/api-docs"] = &spec
+		specMap[restSingleSpecPath] = &spec
 		return
 	}
 
 	var configURLs []config.ConfigURL
 	for i := range specs {
 		spec := &specs[i]
-		path := fmt.Sprintf("/v3/api-docs/%s", g.makeUnique(spec.FileId))
+		path := fmt.Sprintf(restMultiSpecPathPrefix, g.makeUnique(spec.FileId))
 
 		specMap[path] = spec
 
@@ -143,7 +150,7 @@ func (g *Generator) generateRestEndpoints(specs []config.SpecMetadata, specMap m
 	}
 
 	if len(specs) > 1 {
-		configMap["/v3/api-docs/swagger-config"] = configURLs
+		configMap[restSwaggerConfigPath] = configURLs
 	}
 }
 
@@ -209,7 +216,7 @@ func (g *Generator) generateOtherEndpoints(specsByType map[config.ApiType][]conf
 		if apiType == config.ApiTypeMarkdown || apiType == config.ApiTypeUnknown {
 			for i := range specs {
 				spec := &specs[i]
-				path := fmt.Sprintf("/v3/api-docs/%s", g.makeUnique(spec.FileId))
+				path := fmt.Sprintf(restMultiSpecPathPrefix, g.makeUnique(spec.FileId))
 				specMap[path] = spec
 			}
 		}
@@ -230,7 +237,7 @@ func (g *Generator) generateApihubConfig(specMap map[string]*config.SpecMetadata
 		configURLs = append(configURLs, url)
 	}
 
-	configMap["/v3/api-docs/apihub-swagger-config"] = configURLs
+	configMap[restApihubConfigPath] = configURLs
 }
 func (g *Generator) makeUnique(fileId string) string {
 	if !g.usedFileIds[fileId] {
