@@ -1,5 +1,5 @@
 qubership-apihub-service/.idea
-qubership-apihub-service/go.sum
+# qubership-apihub-service/go.sum tracked for Bazel go_deps
 .idea
 .vscode
 .history

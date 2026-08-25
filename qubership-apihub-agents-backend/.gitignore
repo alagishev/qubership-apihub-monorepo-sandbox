@@ -3,7 +3,7 @@
 *.bak
 *.iml
 .DS_Store
-go.sum
+# go.sum tracked for Bazel go_deps
 qubership-apihub-agents-backend/qubership-apihub-agents-backend
 qubership-apihub-agents-backend/qubership-apihub-agents-backend.exe
 qubership-apihub-agents-backend/config.yaml

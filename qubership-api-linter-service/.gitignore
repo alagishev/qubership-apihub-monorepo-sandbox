@@ -2,7 +2,7 @@
 .vscode
 *.bak
 *.iml
-go.sum
+# go.sum tracked for Bazel go_deps
 api-linter-service/*debug*.exe
 api-linter-service/tmp
 qubership-api-linter-service/qubership-api-linter-service
