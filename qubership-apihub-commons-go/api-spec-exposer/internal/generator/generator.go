@@ -125,7 +125,7 @@ func (g *Generator) generateRestEndpoints(specs []config.SpecMetadata, specMap m
 
 	if len(specs) == 1 {
 		spec := specs[0]
-		specMap["/v3/api-docs"] = &spec
+		specMap["/v4/api-docs"] = &spec
 		return
 	}
 
