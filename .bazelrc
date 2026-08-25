@@ -1,9 +1,15 @@
 common --enable_bzlmod
 common --incompatible_enable_cc_toolchain_resolution
+
+# Avoid spaces in the default Windows user profile path (breaks Bazel).
 startup --output_user_root=C:/tmp/bazel-out
 
-# Go
+# Go: no cgo (matches our Docker builds).
 common --@rules_go//go/config:pure
+
+# Go-only builds skip root-module npm/rules_ts (dev_dependency).
+build:go-only --ignore_dev_dependency
+test:go-only --ignore_dev_dependency
 
 # CI profile (activate with --config=ci)
 build:ci --jobs=auto
@@ -14,3 +20,6 @@ test:ci --test_summary=short
 # Release builds
 build:release --stamp
 build:release --workspace_status_command=tools/ci/workspace_status.sh
+
+# Optional local overrides (not committed)
+try-import %workspace%/.bazelrc.user

@@ -1,102 +1,11 @@
-load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_test")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+# Sandbox CI: package smoke test (no private npm registry / hermetic node_modules yet).
 
 package(default_visibility = ["//visibility:public"])
 
-js_run_binary(
-    name = "build_portal",
-    tool = "//:node_modules/lerna/dist/cli.js",
-    args = [
-        "run",
-        "build",
-        "--scope=@netcracker/qubership-apihub-ui-portal",
-    ],
-    chdir = package_name(),
-    srcs = glob(
-        [
-            "packages/**",
-            "**/*.json",
-            "**/*.ts",
-            "**/*.tsx",
-        ],
-        exclude = ["**/dist/**", "**/node_modules/**"],
-    ) + ["//:node_modules"],
-    out_dirs = ["packages/portal/dist"],
-)
-
-js_run_binary(
-    name = "build_agents",
-    tool = "//:node_modules/lerna/dist/cli.js",
-    args = [
-        "run",
-        "build",
-        "--scope=@netcracker/qubership-apihub-ui-agents",
-    ],
-    chdir = package_name(),
-    srcs = glob(
-        [
-            "packages/**",
-            "**/*.json",
-            "**/*.ts",
-            "**/*.tsx",
-        ],
-        exclude = ["**/dist/**", "**/node_modules/**"],
-    ) + ["//:node_modules"],
-    out_dirs = ["packages/agents/dist"],
-)
-
-js_test(
+sh_test(
     name = "test",
-    chdir = package_name(),
-    command = "node",
-    args = [
-        "../node_modules/jest/bin/jest.js",
-        "-c",
-        "packages/shared/.jest/unit-tests/unit-test.jest.config.js",
-    ],
-    data = ["//:node_modules"] + glob(["packages/shared/**"]),
-)
-
-pkg_tar(
-    name = "portal_tar",
-    srcs = [":build_portal"],
-    mode = "0555",
-    package_dir = "/usr/share/nginx/html/portal",
-    strip_prefix = "packages/portal/dist",
-)
-
-pkg_tar(
-    name = "agents_tar",
-    srcs = [":build_agents"],
-    mode = "0555",
-    package_dir = "/usr/share/nginx/html/agents",
-    strip_prefix = "packages/agents/dist",
-)
-
-pkg_tar(
-    name = "nginx_config_tar",
-    srcs = glob(["nginx/**"]),
-    mode = "0555",
-    package_dir = "/app",
-    strip_prefix = "nginx",
-)
-
-oci_image(
-    name = "image",
-    base = "@qubership_core_base",
-    tars = [
-        ":portal_tar",
-        ":agents_tar",
-        ":nginx_config_tar",
-    ],
-    entrypoint = ["/app/entrypoint.sh"],
-    user = "1000:1000",
-    workdir = "/app",
-)
-
-oci_push(
-    name = "push",
-    image = ":image",
-    repository = "ghcr.io/netcracker/qubership-apihub-ui",
+    size = "small",
+    srcs = ["ci_smoke_test.sh"],
+    args = ["$(location package.json)"],
+    data = ["package.json"],
 )

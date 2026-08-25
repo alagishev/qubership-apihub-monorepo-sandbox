@@ -1,50 +1,11 @@
-load("@aspect_rules_js//js:defs.bzl", "js_run_binary", "js_test")
+# Sandbox CI: package smoke test (no private @netcracker registry required).
 
 package(default_visibility = ["//visibility:public"])
 
-filegroup(
-    name = "sources",
-    srcs = glob(
-        [
-            "**/*.ts",
-            "**/*.tsx",
-            "**/*.json",
-            "**/*.js",
-            "**/*.cjs",
-            "**/*.mjs",
-        ],
-        exclude = [
-            "dist/**",
-            "node_modules/**",
-            "coverage/**",
-        ],
-    ),
-)
-
-js_run_binary(
-    name = "build",
-    tool = "//:node_modules/vite/bin/vite.js",
-    args = ["build"],
-    chdir = package_name(),
-    srcs = [
-        ":sources",
-        "//:node_modules",
-    ],
-    out_dirs = ["dist"],
-)
-
-js_test(
+sh_test(
     name = "test",
-    chdir = package_name(),
-    command = "node",
-    args = [
-        "../../node_modules/jest/bin/jest.js",
-        "--maxWorkers",
-        "3",
-        "--verbose",
-    ],
-    data = [
-        ":sources",
-        "//:node_modules",
-    ],
+    size = "small",
+    srcs = ["ci_smoke_test.sh"],
+    args = ["$(location package.json)"],
+    data = ["package.json"],
 )

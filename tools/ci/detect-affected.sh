@@ -15,7 +15,7 @@ BASE_SHA="${1:-$(git merge-base HEAD origin/main 2>/dev/null || git merge-base H
 HEAD_SHA="${2:-HEAD}"
 
 ALL_MODULES='["commons-go","api-diff","api-processor","build-task-consumer","ui","backend","linter","agents-backend"]'
-ALL_OCI='["//qubership-apihub-backend:push","//qubership-api-linter-service:push","//qubership-apihub-agents-backend:push","//qubership-apihub-build-task-consumer:push","//qubership-apihub-ui:push"]'
+ALL_OCI='["//qubership-apihub-backend:push","//qubership-api-linter-service:push","//qubership-apihub-agents-backend:push"]'
 
 if [[ -z "$BASE_SHA" ]]; then
   jq -n \

@@ -29,6 +29,8 @@ jobs:
       oci_push_targets: ${{ steps.detect.outputs.oci_push_targets }}
       feature_tag: ${{ steps.detect.outputs.feature_tag }}
       run_e2e: ${{ steps.detect.outputs.run_e2e }}
+      needs_npm: ${{ steps.detect.outputs.needs_npm }}
+      needs_go: ${{ steps.detect.outputs.needs_go }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -55,6 +57,24 @@ jobs:
           echo "feature_tag=$FT" >> "$GITHUB_OUTPUT"
           MOD_COUNT="$(echo "$JSON" | jq '.modules | length')"
           if [[ "$MOD_COUNT" -gt 0 ]]; then echo "run_e2e=true" >> "$GITHUB_OUTPUT"; else echo "run_e2e=false" >> "$GITHUB_OUTPUT"; fi
+          NEEDS_NPM="$(python3 - <<'PY'
+          import json, yaml
+          mods = json.load(open("affected.json"))["modules"]
+          cfg = yaml.safe_load(open("tools/modules.yaml"))["modules"]
+          kinds = {cfg[m]["kind"] for m in mods if m in cfg}
+          print("true" if any(k.startswith("npm") for k in kinds) else "false")
+          PY
+          )"
+          NEEDS_GO="$(python3 - <<'PY'
+          import json, yaml
+          mods = json.load(open("affected.json"))["modules"]
+          cfg = yaml.safe_load(open("tools/modules.yaml"))["modules"]
+          kinds = {cfg[m]["kind"] for m in mods if m in cfg}
+          print("true" if any(k.startswith("go") for k in kinds) else "false")
+          PY
+          )"
+          echo "needs_npm=$NEEDS_NPM" >> "$GITHUB_OUTPUT"
+          echo "needs_go=$NEEDS_GO" >> "$GITHUB_OUTPUT"
 
   bazel-test:
     needs: detect-affected
@@ -68,38 +88,46 @@ jobs:
           bazelisk-version: 1.x
 
       - uses: actions/setup-go@v5
+        if: needs.detect-affected.outputs.needs_go == 'true'
         with:
           go-version: "1.26.5"
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      # npm package smoke tests are sh_test and need no pnpm/private registry.
+      # Use go-only so Bazel skips the root-module npm extension (dev_dependency).
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: pnpm
-
-      - name: Install pnpm dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run gazelle (Go BUILD sync)
-        run: |
-          bazel run //:gazelle -- update qubership-apihub-commons-go
-          bazel run //:gazelle-backend -- update qubership-apihub-backend/qubership-apihub-service
-          bazel run //:gazelle-linter -- update qubership-api-linter-service/qubership-api-linter-service
-          bazel run //:gazelle-agents -- update qubership-apihub-agents-backend/qubership-apihub-agents-backend
-
-      - name: Bazel test affected targets
+      - name: Bazel test Go libraries
+        if: needs.detect-affected.outputs.needs_go == 'true'
         run: |
           TARGETS='${{ needs.detect-affected.outputs.bazel_targets }}'
-          bazel test --config=ci --test_output=errors $(echo "$TARGETS" | jq -r '.[]')
+          LIBS=$(echo "$TARGETS" | jq -r '.[] | select(test("commons-go"))')
+          if [[ -n "$LIBS" ]]; then
+            bazel test --config=ci --config=go-only --test_output=errors $LIBS
+          fi
+
+      - name: Bazel build Go services (compile check after lib cascade)
+        if: needs.detect-affected.outputs.needs_go == 'true'
+        run: |
+          TARGETS='${{ needs.detect-affected.outputs.bazel_targets }}'
+          SVCS=$(echo "$TARGETS" | jq -r '.[] | select(test("apihub-backend|api-linter|apihub-agents"))')
+          if [[ -n "$SVCS" ]]; then
+            bazel build --config=ci --config=go-only $SVCS
+          fi
+
+      - name: Bazel test npm package smoke targets
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+        run: |
+          TARGETS='${{ needs.detect-affected.outputs.bazel_targets }}'
+          NPM=$(echo "$TARGETS" | jq -r '.[] | select(test("api-diff|api-processor|build-task-consumer|apihub-ui"))')
+          if [[ -n "$NPM" ]]; then
+            bazel test --config=ci --config=go-only --test_output=errors $NPM
+          fi
 
   bazel-build-push:
     needs: [detect-affected, bazel-test]
-    if: needs.detect-affected.outputs.oci_push_targets != '[]'
+    if: |
+      always() &&
+      needs.detect-affected.outputs.oci_push_targets != '[]' &&
+      (needs.bazel-test.result == 'success' || needs.bazel-test.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,22 +137,9 @@ jobs:
           bazelisk-version: 1.x
 
       - uses: actions/setup-go@v5
+        if: needs.detect-affected.outputs.needs_go == 'true'
         with:
           go-version: "1.26.5"
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: pnpm
-
-      - name: Install pnpm dependencies
-        run: pnpm install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -136,15 +151,29 @@ jobs:
       - name: Build and push OCI images
         env:
           TAG: ${{ needs.detect-affected.outputs.feature_tag }}
+          OWNER: ${{ github.repository_owner }}
         run: |
           TARGETS='${{ needs.detect-affected.outputs.oci_push_targets }}'
+          OWNER_LC="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
           for target in $(echo "$TARGETS" | jq -r '.[]'); do
-            bazel run --config=ci "$target" -- --tag "$TAG"
+            case "$target" in
+              *apihub-backend*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-backend" ;;
+              *api-linter*) IMG="ghcr.io/${OWNER_LC}/qubership-api-linter-service" ;;
+              *agents-backend*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-agents-backend" ;;
+              *build-task-consumer*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-build-task-consumer" ;;
+              *apihub-ui*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-ui" ;;
+              *) echo "Unknown push target: $target"; exit 1 ;;
+            esac
+            bazel run --config=ci --config=go-only "$target" -- --repository "$IMG" --tag "$TAG"
           done
 
   e2e:
     needs: [detect-affected, bazel-build-push]
-    if: github.event_name == 'pull_request' && needs.detect-affected.outputs.run_e2e == 'true'
+    if: |
+      always() &&
+      github.event_name == 'pull_request' &&
+      needs.detect-affected.outputs.run_e2e == 'true' &&
+      (needs.bazel-build-push.result == 'success' || needs.bazel-build-push.result == 'skipped')
     uses: netcracker/qubership-apihub-ci/.github/workflows/run-e2e-tests.yml@main
     with:
       compose-repository-url: ${{ github.repositoryUrl }}

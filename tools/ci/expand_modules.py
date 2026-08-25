@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Expand module list with transitive dependents from tools/modules.yaml."""
+"""Expand module list with transitive dependents from tools/modules.yaml.
+
+`dependents` on a module means consumers that must rebuild when it changes
+(e.g. commons-go.dependents = [backend, linter, agents-backend]).
+"""
 
 from __future__ import annotations
 
@@ -23,19 +27,15 @@ def load_modules(root: Path) -> dict:
 
 
 def expand(modules_cfg: dict, seeds: set[str]) -> list[str]:
-    reverse: dict[str, list[str]] = {}
-    for mod_id, cfg in modules_cfg.items():
-        for dep in cfg.get("dependents", []) or []:
-            reverse.setdefault(dep, []).append(mod_id)
-
     result = set(seeds)
     queue = list(seeds)
     while queue:
         current = queue.pop(0)
-        for parent in reverse.get(current, []):
-            if parent not in result:
-                result.add(parent)
-                queue.append(parent)
+        cfg = modules_cfg.get(current, {})
+        for dep in cfg.get("dependents", []) or []:
+            if dep not in result:
+                result.add(dep)
+                queue.append(dep)
     return sorted(result)
 
 

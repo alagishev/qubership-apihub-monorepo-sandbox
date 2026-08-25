@@ -34,7 +34,7 @@ modules:
     bazel: //qubership-apihub-build-task-consumer/...
     release_tag: build-task-consumer/v
     image: ghcr.io/netcracker/qubership-apihub-build-task-consumer
-    oci_push: //qubership-apihub-build-task-consumer:push
+    # oci_push deferred until hermetic npm image build works in this sandbox
     e2e_profile: compose
 
   ui:
@@ -43,7 +43,7 @@ modules:
     bazel: //qubership-apihub-ui/...
     release_tag: ui/v
     image: ghcr.io/netcracker/qubership-apihub-ui
-    oci_push: //qubership-apihub-ui:push
+    # oci_push deferred until hermetic npm image build works in this sandbox
     e2e_profile: compose-playwright
 
   backend:

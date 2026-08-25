@@ -1,63 +1,11 @@
-load("@aspect_rules_js//js:defs.bzl", "js_run_binary")
-load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
-load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+# Sandbox CI: package smoke test (no private npm registry / hermetic node_modules yet).
 
 package(default_visibility = ["//visibility:public"])
 
-filegroup(
-    name = "sources",
-    srcs = glob(
-        [
-            "src/**/*.ts",
-            "**/*.json",
-        ],
-        exclude = [
-            "dist/**",
-            "node_modules/**",
-        ],
-    ),
-)
-
-js_run_binary(
-    name = "nest_build",
-    tool = "//:node_modules/@nestjs/cli/bin/nest.js",
-    args = ["build"],
-    chdir = package_name(),
-    srcs = [
-        ":sources",
-        "//:node_modules",
-        "//qubership-apihub-api-processor:build_vite",
-    ],
-    out_dirs = ["dist"],
-)
-
-pkg_tar(
-    name = "app_tar",
-    srcs = [
-        ":nest_build",
-        "package.json",
-        "npm-shrinkwrap.json",
-    ],
-    mode = "0555",
-    package_dir = "/usr/src/app",
-)
-
-oci_image(
-    name = "image",
-    base = "@qubership_core_base",
-    tars = [":app_tar"],
-    entrypoint = [
-        "node",
-        "--max-old-space-size=3100",
-        "--max-semi-space-size=32",
-        "dist/main",
-    ],
-    user = "10001:10001",
-    workdir = "/usr/src/app",
-)
-
-oci_push(
-    name = "push",
-    image = ":image",
-    repository = "ghcr.io/netcracker/qubership-apihub-build-task-consumer",
+sh_test(
+    name = "test",
+    size = "small",
+    srcs = ["ci_smoke_test.sh"],
+    args = ["$(location package.json)"],
+    data = ["package.json"],
 )
