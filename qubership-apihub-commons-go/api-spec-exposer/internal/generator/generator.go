@@ -17,6 +17,10 @@ const (
 	restApihubConfigPath    = "/v3/api-docs/apihub-swagger-config"
 )
 
+func restMultiSpecPath(fileId string) string {
+	return fmt.Sprintf(restMultiSpecPathPrefix, fileId)
+}
+
 // Generator generates endpoint configurations (@config.EndpointConfig) based on discovered specs
 type Generator struct {
 	specs       []config.SpecMetadata
@@ -139,7 +143,7 @@ func (g *Generator) generateRestEndpoints(specs []config.SpecMetadata, specMap m
 	var configURLs []config.ConfigURL
 	for i := range specs {
 		spec := &specs[i]
-		path := fmt.Sprintf(restMultiSpecPathPrefix, g.makeUnique(spec.FileId))
+		path := restMultiSpecPath(g.makeUnique(spec.FileId))
 
 		specMap[path] = spec
 
@@ -216,7 +220,7 @@ func (g *Generator) generateOtherEndpoints(specsByType map[config.ApiType][]conf
 		if apiType == config.ApiTypeMarkdown || apiType == config.ApiTypeUnknown {
 			for i := range specs {
 				spec := &specs[i]
-				path := fmt.Sprintf(restMultiSpecPathPrefix, g.makeUnique(spec.FileId))
+				path := restMultiSpecPath(g.makeUnique(spec.FileId))
 				specMap[path] = spec
 			}
 		}
