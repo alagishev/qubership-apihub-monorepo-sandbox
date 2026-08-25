@@ -160,7 +160,6 @@ jobs:
       apihub-ui-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'ui') && needs.detect-affected.outputs.feature_tag || 'dev' }}
       apihub-api-linter-service-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'linter') && needs.detect-affected.outputs.feature_tag || 'dev' }}
       apihub-agents-backend-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'agents-backend') && needs.detect-affected.outputs.feature_tag || 'dev' }}
-      postman-repository-branch: ${{ github.head_ref }}
       playwright-repository-branch: ${{ github.head_ref }}
     secrets:
       APIHUB_ACCESS_TOKEN: ${{ secrets.APIHUB_ACCESS_TOKEN }}
