@@ -109,6 +109,12 @@ jobs:
             echo "No commons-go targets in this change; skip Go library tests."
           fi
 
+      - name: Go compile cascade (go.work dependents)
+        if: needs.detect-affected.outputs.needs_go == 'true'
+        run: |
+          MODULES='${{ needs.detect-affected.outputs.modules }}'
+          python3 tools/ci/go_work_compile.py "$MODULES"
+
       - name: Bazel test npm package smoke targets
         if: needs.detect-affected.outputs.needs_npm == 'true'
         run: |
