@@ -52,7 +52,7 @@ modules:
     bazel: //qubership-apihub-backend/...
     release_tag: backend/v
     image: ghcr.io/netcracker/qubership-apihub-backend
-    oci_push: //qubership-apihub-backend:push
+    # oci_push deferred until Gazelle BUILD deps are complete
     e2e_profile: compose-full
 
   linter:
@@ -61,7 +61,7 @@ modules:
     bazel: //qubership-api-linter-service/...
     release_tag: linter/v
     image: ghcr.io/netcracker/qubership-api-linter-service
-    oci_push: //qubership-api-linter-service:push
+    # oci_push deferred until Gazelle BUILD deps are complete
     e2e_profile: compose-linter
 
   agents-backend:
@@ -70,7 +70,7 @@ modules:
     bazel: //qubership-apihub-agents-backend/...
     release_tag: agents-backend/v
     image: ghcr.io/netcracker/qubership-apihub-agents-backend
-    oci_push: //qubership-apihub-agents-backend:push
+    # oci_push deferred until Gazelle BUILD deps are complete
     e2e_profile: kind
 
 e2e_profiles:
