@@ -34,11 +34,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install bazel-diff
-        run: |
-          curl -fsSL -o /usr/local/bin/bazel-diff \
-            https://github.com/Tinder/bazel-diff/releases/download/7.0.0/bazel-diff-linux-amd64
-          chmod +x /usr/local/bin/bazel-diff
+      - name: Install detect dependencies
+        run: pip install --user pyyaml
 
       - name: Detect affected targets
         id: detect
@@ -47,7 +44,7 @@ jobs:
         run: |
           BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
           if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
-            BASE="$(git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)"
+            BASE="$(git merge-base HEAD origin/develop 2>/dev/null || git merge-base HEAD origin/main 2>/dev/null || git rev-parse HEAD~1)"
           fi
           JSON="$(bash tools/ci/detect-affected.sh "$BASE" HEAD)"
           echo "$JSON" | tee affected.json
@@ -61,6 +58,7 @@ jobs:
 
   bazel-test:
     needs: detect-affected
+    if: needs.detect-affected.outputs.bazel_targets != '[]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
