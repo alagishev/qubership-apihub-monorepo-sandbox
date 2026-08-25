@@ -13,8 +13,58 @@ permissions:
   packages: read
 
 jobs:
-  call-storybook-cd-workflow:
-    uses: netcracker/qubership-apihub-ci/.github/workflows/storybook-cd.yaml@main
-    permissions:
-      contents: write
-      packages: read
+  deploy-storybook:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+          registry-url: "https://npm.pkg.github.com/"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUPPETEER_SKIP_DOWNLOAD: 1
+          HUSKY: 0
+
+      - name: Build the showcase
+        working-directory: qubership-apihub-ui
+        run: pnpm run build:showcase
+
+      - name: Deploy Storybook to gh-pages
+        uses: peaceiris/actions-gh-pages@v4.1.0
+        with:
+          destination_dir: ${{ github.ref_name }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./qubership-apihub-ui/dist-showcase
+
+  delete-folder-from-gh-pages:
+    if: github.event_name == 'delete' && github.event.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+
+      - name: Delete corresponding folder in gh-pages branch
+        env:
+          BRANCH_REF: ${{ github.event.ref }}
+        run: |
+          if [ -d "$BRANCH_REF" ]; then
+            rm -rf "$BRANCH_REF"
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .
+            git commit -m "docs: delete folder ${BRANCH_REF} from gh-pages branch"
+            git push origin gh-pages
+          fi
