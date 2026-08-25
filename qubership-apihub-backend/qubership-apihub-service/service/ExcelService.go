@@ -1980,8 +1980,9 @@ func getSummaryHeaderStyle(file *excelize.File) (style int) {
 func buildCoverPage(file *excelize.File, packageName, reportName, packageVersion, packageVersionStatus string) error {
 	var err error
 
-	err = file.AddShape("Cover Page", "B15",
+	err = file.AddShape("Cover Page",
 		&excelize.Shape{
+			Cell: "B15",
 			Type: "rect",
 			Paragraph: []excelize.RichTextRun{
 				{
@@ -2001,8 +2002,9 @@ func buildCoverPage(file *excelize.File, packageName, reportName, packageVersion
 		return err
 	}
 
-	err = file.AddShape("Cover Page", "B18",
+	err = file.AddShape("Cover Page",
 		&excelize.Shape{
+			Cell: "B18",
 			Type: "rect",
 			Paragraph: []excelize.RichTextRun{
 				{
