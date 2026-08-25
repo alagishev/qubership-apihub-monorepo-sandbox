@@ -23,3 +23,5 @@ agent-packages/**/build/
 
 # pnpm / node at repo root
 /node_modules
+
+.bazelrc.user

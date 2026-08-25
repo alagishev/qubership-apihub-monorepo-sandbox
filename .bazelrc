@@ -1,9 +1,6 @@
 common --enable_bzlmod
 common --incompatible_enable_cc_toolchain_resolution
 
-# Avoid spaces in the default Windows user profile path (breaks Bazel).
-startup --output_user_root=C:/tmp/bazel-out
-
 # Go: no cgo (matches our Docker builds).
 common --@rules_go//go/config:pure
 
@@ -21,5 +18,7 @@ test:ci --test_summary=short
 build:release --stamp
 build:release --workspace_status_command=tools/ci/workspace_status.sh
 
-# Optional local overrides (not committed)
+# Optional local overrides (not committed). On Windows with a space in the
+# user profile path, add e.g.:
+#   startup --output_user_root=C:/tmp/bazel-out
 try-import %workspace%/.bazelrc.user
