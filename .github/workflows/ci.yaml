@@ -176,7 +176,7 @@ jobs:
       always() &&
       github.event_name == 'pull_request' &&
       needs.detect-affected.outputs.run_e2e == 'true' &&
-      (needs.bazel-build-push.result == 'success' || needs.bazel-build-push.result == 'skipped')
+      needs.bazel-build-push.result == 'success'
     uses: netcracker/qubership-apihub-ci/.github/workflows/run-e2e-tests.yml@main
     with:
       compose-repository-url: ${{ github.repositoryUrl }}
