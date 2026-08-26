@@ -5,4 +5,5 @@ go_library(
     srcs = ["config.go"],
     importpath = "github.com/Netcracker/qubership-apihub-agents-backend/config",
     visibility = ["//visibility:public"],
+    deps = [],
 )

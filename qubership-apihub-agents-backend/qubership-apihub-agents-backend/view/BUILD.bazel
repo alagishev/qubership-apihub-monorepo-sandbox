@@ -23,5 +23,7 @@ go_library(
     ],
     importpath = "github.com/Netcracker/qubership-apihub-agents-backend/view",
     visibility = ["//visibility:public"],
-    deps = ["//qubership-apihub-agents-backend/qubership-apihub-agents-backend/utils"],
+    deps = [
+        "//qubership-apihub-agents-backend/qubership-apihub-agents-backend/utils",
+    ],
 )

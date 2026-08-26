@@ -5,4 +5,5 @@ go_library(
     srcs = ["errors.go"],
     importpath = "github.com/Netcracker/qubership-api-linter-service/exception",
     visibility = ["//visibility:public"],
+    deps = [],
 )

@@ -25,3 +25,7 @@ agent-packages/**/build/
 /node_modules
 
 .bazelrc.user
+
+__pycache__/
+*.py[cod]
+

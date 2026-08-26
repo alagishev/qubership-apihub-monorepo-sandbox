@@ -3,7 +3,7 @@
 # Usage: tools/ci/detect-affected.sh [base_sha] [head_sha]
 # Outputs JSON to stdout: { "bazel_targets", "modules", "feature_tag", "oci_push_targets" }
 #
-# Primary strategy: git path → tools/modules.yaml (+ dependents).
+# Primary strategy: git path -> tools/modules.yaml (+ dependents).
 # Optional: if bazel-diff and bazel are on PATH, refine bazel_targets via hash diff.
 
 set -euo pipefail
@@ -15,13 +15,13 @@ BASE_SHA="${1:-$(git merge-base HEAD origin/main 2>/dev/null || git merge-base H
 HEAD_SHA="${2:-HEAD}"
 
 ALL_MODULES='["commons-go","api-diff","api-processor","build-task-consumer","ui","backend","linter","agents-backend"]'
-ALL_OCI='[]'
 
 if [[ -z "$BASE_SHA" ]]; then
+  ALL_MAPPED=$(python3 "$ROOT/tools/ci/modules_to_targets.py" "$ALL_MODULES" 2>/dev/null || echo '{"bazel_targets":["//..."],"oci_push_targets":[]}')
   jq -n \
-    --argjson bazel_targets '["//..."]' \
+    --argjson bazel_targets "$(echo "$ALL_MAPPED" | jq -c '.bazel_targets')" \
     --argjson modules "$ALL_MODULES" \
-    --argjson oci_push_targets "$ALL_OCI" \
+    --argjson oci_push_targets "$(echo "$ALL_MAPPED" | jq -c '.oci_push_targets')" \
     --arg feature_tag "dev" \
     '{bazel_targets: $bazel_targets, modules: $modules, feature_tag: $feature_tag, oci_push_targets: $oci_push_targets}'
   exit 0
@@ -59,7 +59,7 @@ if [[ -f "$ROOT/tools/ci/expand_modules.py" ]]; then
   [[ -n "$EXPANDED" ]] && MODULES="$EXPANDED"
 fi
 
-# Map modules → bazel package globs + oci_push targets
+# Map modules to bazel package globs + oci_push targets
 if [[ -f "$ROOT/tools/ci/modules_to_targets.py" ]]; then
   MAPPED=$(python3 "$ROOT/tools/ci/modules_to_targets.py" "$MODULES" 2>/dev/null || echo '{"bazel_targets":[],"oci_push_targets":[]}')
   BAZEL_TARGETS=$(echo "$MAPPED" | jq -c '.bazel_targets')
@@ -82,8 +82,8 @@ if command -v bazel >/dev/null 2>&1 && command -v bazel-diff >/dev/null 2>&1 && 
   fi
 fi
 
-# No module hit (e.g. only root CI/docs) → skip product builds; still emit empty lists
-# If CI/tooling changed, callers may still want a smoke test — leave targets empty.
+# No module hit (e.g. only root CI/docs) -> skip product builds; still emit empty lists.
+# If CI/tooling changed, callers may still want a smoke test - leave targets empty.
 
 jq -n \
   --argjson bazel_targets "$BAZEL_TARGETS" \

@@ -61,6 +61,17 @@ bazel build //qubership-apihub-backend:image
 bazel run //qubership-apihub-backend:push -- --tag dev
 ```
 
+Go service `BUILD.bazel` deps can be refreshed with:
+
+```bash
+python tools/bazel/sync_go_build_deps.py
+```
+
+(Prefer `bazel run //:gazelle-backend` on Linux when Gazelle resolves `go.work` deps correctly.)
+
+On a `commons-go` change, detect expands dependents and CI pushes
+`backend` / `linter` / `agents-backend` feature tags, then runs PR E2E against those images.
+
 ## CI
 
 Root workflows under [`.github/workflows/`](../.github/workflows/):

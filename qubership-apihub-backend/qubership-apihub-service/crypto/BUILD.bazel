@@ -5,4 +5,5 @@ go_library(
     srcs = ["Hash.go"],
     importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/crypto",
     visibility = ["//visibility:public"],
+    deps = [],
 )

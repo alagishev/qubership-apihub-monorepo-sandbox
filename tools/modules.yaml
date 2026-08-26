@@ -34,7 +34,7 @@ modules:
     bazel: //qubership-apihub-build-task-consumer/...
     release_tag: build-task-consumer/v
     image: ghcr.io/netcracker/qubership-apihub-build-task-consumer
-    # oci_push deferred until hermetic npm image build works in this sandbox
+    # TODO(npm-oci): restore oci_push when hermetic rules_js image build works
     e2e_profile: compose
 
   ui:
@@ -43,7 +43,7 @@ modules:
     bazel: //qubership-apihub-ui/...
     release_tag: ui/v
     image: ghcr.io/netcracker/qubership-apihub-ui
-    # oci_push deferred until hermetic npm image build works in this sandbox
+    # TODO(npm-oci): restore oci_push when hermetic rules_js/Vite image build works
     e2e_profile: compose-playwright
 
   backend:
@@ -52,7 +52,7 @@ modules:
     bazel: //qubership-apihub-backend/...
     release_tag: backend/v
     image: ghcr.io/netcracker/qubership-apihub-backend
-    # oci_push deferred until Gazelle BUILD deps are complete
+    oci_push: //qubership-apihub-backend:push
     e2e_profile: compose-full
 
   linter:
@@ -61,7 +61,7 @@ modules:
     bazel: //qubership-api-linter-service/...
     release_tag: linter/v
     image: ghcr.io/netcracker/qubership-api-linter-service
-    # oci_push deferred until Gazelle BUILD deps are complete
+    oci_push: //qubership-api-linter-service:push
     e2e_profile: compose-linter
 
   agents-backend:
@@ -70,7 +70,7 @@ modules:
     bazel: //qubership-apihub-agents-backend/...
     release_tag: agents-backend/v
     image: ghcr.io/netcracker/qubership-apihub-agents-backend
-    # oci_push deferred until Gazelle BUILD deps are complete
+    oci_push: //qubership-apihub-agents-backend:push
     e2e_profile: kind
 
 e2e_profiles:

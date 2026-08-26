@@ -29,4 +29,5 @@ go_library(
     ],
     importpath = "github.com/Netcracker/qubership-api-linter-service/view",
     visibility = ["//visibility:public"],
+    deps = [],
 )

@@ -96,9 +96,6 @@ jobs:
       # npm package smoke tests are sh_test and need no pnpm/private registry.
       # Use go-only so Bazel skips the root-module npm extension (dev_dependency).
 
-      # Go service //... builds are deferred until Gazelle BUILD deps are complete.
-      # commons-go tests and npm package smoke tests are the validated CI surface for now.
-
       - name: Bazel test Go libraries
         if: needs.detect-affected.outputs.needs_go == 'true'
         run: |
@@ -108,6 +105,20 @@ jobs:
             bazel test --config=ci --config=go-only --test_output=errors $LIBS
           else
             echo "No commons-go targets in this change; skip Go library tests."
+          fi
+
+      - name: Bazel build Go service binaries
+        if: needs.detect-affected.outputs.needs_go == 'true'
+        run: |
+          MODULES='${{ needs.detect-affected.outputs.modules }}'
+          TARGETS=()
+          echo "$MODULES" | jq -e 'index("backend")' >/dev/null && TARGETS+=("//qubership-apihub-backend/qubership-apihub-service:qubership-apihub-service")
+          echo "$MODULES" | jq -e 'index("linter")' >/dev/null && TARGETS+=("//qubership-api-linter-service/qubership-api-linter-service:qubership-api-linter-service")
+          echo "$MODULES" | jq -e 'index("agents-backend")' >/dev/null && TARGETS+=("//qubership-apihub-agents-backend/qubership-apihub-agents-backend:qubership-apihub-agents-backend")
+          if [[ ${#TARGETS[@]} -gt 0 ]]; then
+            bazel build --config=ci --config=go-only "${TARGETS[@]}"
+          else
+            echo "No Go service modules in this change; skip binary builds."
           fi
 
       - name: Go compile cascade (go.work dependents)
