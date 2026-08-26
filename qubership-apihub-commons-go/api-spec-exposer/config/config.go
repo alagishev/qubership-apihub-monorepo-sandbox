@@ -73,10 +73,12 @@ type DiscoveryConfig struct {
 	ExcludePatterns []string
 }
 
+const defaultScanDirectory = "."
+
 // DefaultConfig returns a default discovery configuration
 func DefaultConfig() DiscoveryConfig {
 	return DiscoveryConfig{
-		ScanDirectory:   ".",
+		ScanDirectory:   defaultScanDirectory,
 		ExcludePatterns: []string{},
 	}
 }

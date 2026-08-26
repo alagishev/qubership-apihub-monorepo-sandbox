@@ -41,8 +41,12 @@ export const isEmptyArray = (value: unknown): boolean => {
   return (Array.isArray(value) && !value.length)
 }
 
+export const isUndefined = (value: unknown): value is undefined => {
+  return typeof value === 'undefined'
+}
+
 export const isExist = (value: unknown): boolean => {
-  return typeof value !== 'undefined'
+  return !isUndefined(value)
 }
 
 export const isString = (value: unknown): value is string => {
