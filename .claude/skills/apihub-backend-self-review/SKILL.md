@@ -22,7 +22,8 @@ In addition to `apihub-go-self-review`:
 
 ### API and OpenAPI
 
-- [ ] REST changes have matching updates in `docs/api/` (correct spec file: `APIHUB_API.yaml`, `Admin API.yaml`, or `APIHUB_API_internal.yaml`).
+- [ ] REST changes have matching updates in `qubership-apihub-backend/docs/api/`
+      (correct spec file: `APIHUB_API.yaml`, `Admin API.yaml`, or `APIHUB_API_internal.yaml`).
 
 ### Migrations
 
@@ -30,12 +31,15 @@ In addition to `apihub-go-self-review`:
 
 ### Documentation
 
-- [ ] Right doc updated per `docs/README.md`; root `README.md` not used for minor features.
+- [ ] Right doc updated per `qubership-apihub-backend/docs/README.md`; root `README.md`
+      not used for minor features.
 
-### Related repositories
+### Related paths
 
-- [ ] If change affects deploy config or REST contract, deployment and Postman follow-up skills were applied (`apihub-deployment-followup`, `postman-e2e-followup`).
-- [ ] Reminder includes concrete actions (env vars, new requests), not only "update other repo".
+- [ ] If change affects deploy config or REST contract, deployment and Postman follow-up
+      skills were applied (`apihub-deployment-followup`, `postman-e2e-followup`).
+- [ ] Reminder includes concrete in-repo paths/actions (env vars, new requests), not only
+      a vague "update elsewhere".
 
 ## Output format
 

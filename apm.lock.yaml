@@ -1,5 +1,5 @@
 lockfile_version: '1'
-generated_at: '2026-08-26T11:53:18.501036+00:00'
+generated_at: '2026-08-26T12:06:31.149249+00:00'
 apm_version: 0.27.0
 dependencies:
 - repo_url: _local/advanced-verification
@@ -14,10 +14,10 @@ dependencies:
   - .cursor/skills/advanced-verification/SKILL.md
   - .cursor/skills/advanced-verification/reference.md
   deployed_file_hashes:
-    .claude/skills/advanced-verification/SKILL.md: sha256:1abe25c8d7d934e23dfbbafe982dd7605d632a69223a27a068ac8029c50b0645
-    .claude/skills/advanced-verification/reference.md: sha256:fb8c9774ed63eecd81e0b4732bcaa59ff1240137a2dca2603f08e18efe2adbf9
-    .cursor/skills/advanced-verification/SKILL.md: sha256:1abe25c8d7d934e23dfbbafe982dd7605d632a69223a27a068ac8029c50b0645
-    .cursor/skills/advanced-verification/reference.md: sha256:fb8c9774ed63eecd81e0b4732bcaa59ff1240137a2dca2603f08e18efe2adbf9
+    .claude/skills/advanced-verification/SKILL.md: sha256:6d57ae008dfaec5b7137dfa17feeede9d67925582045db84921f2bd6a8d9d6aa
+    .claude/skills/advanced-verification/reference.md: sha256:5a2ae4c8d0e246a6f7de497c073a07774f505480468b45f41e15f636a4715bfd
+    .cursor/skills/advanced-verification/SKILL.md: sha256:6d57ae008dfaec5b7137dfa17feeede9d67925582045db84921f2bd6a8d9d6aa
+    .cursor/skills/advanced-verification/reference.md: sha256:5a2ae4c8d0e246a6f7de497c073a07774f505480468b45f41e15f636a4715bfd
   source: local
   local_path: ./agent-packages/advanced-verification
 - repo_url: _local/api-diff-authoring
@@ -111,13 +111,13 @@ dependencies:
   - .cursor/skills/apihub-backend-developer/scripts/check_migration_numbers.sh
   deployed_file_hashes:
     .claude/rules/apihub-backend-developer.md: sha256:bc0ab1c215f008c610d4953a2a9a44de3769c3d4fec4a6eee99c0202408b50eb
-    .claude/skills/apihub-backend-developer/SKILL.md: sha256:4e153557b1accff276e5eea474c801f98ccc7ea55b03528e23baf738c55ddcd5
-    .claude/skills/apihub-backend-developer/reference.md: sha256:48e75b4f542377eae1f71df79cffd0bf019668404df2c0bea64aeed29f035811
+    .claude/skills/apihub-backend-developer/SKILL.md: sha256:14f6e3ecd54345c6607e3163ae94a99eb638b61ac3268952bb98f233f4f5b9df
+    .claude/skills/apihub-backend-developer/reference.md: sha256:d08ba648b698131f8295dac0cc478ee2176f73074ce049ed34f498f9bf3ba1bb
     .claude/skills/apihub-backend-developer/scripts/check_migration_numbers.ps1: sha256:ed9be56dc607e1532310ed78f8ff141712c4cdb3c183c6e7a38deac2294e792b
     .claude/skills/apihub-backend-developer/scripts/check_migration_numbers.sh: sha256:590bc854e8ecf7f0ab39489ca697a9f4c09dfd8a5c793ce3d3aac021e5c5dd7e
     .cursor/rules/apihub-backend-developer.mdc: sha256:6e9ea86c98830ba64af88234bab8894758319cce9ee1d707b15ed2132a0528ec
-    .cursor/skills/apihub-backend-developer/SKILL.md: sha256:4e153557b1accff276e5eea474c801f98ccc7ea55b03528e23baf738c55ddcd5
-    .cursor/skills/apihub-backend-developer/reference.md: sha256:48e75b4f542377eae1f71df79cffd0bf019668404df2c0bea64aeed29f035811
+    .cursor/skills/apihub-backend-developer/SKILL.md: sha256:14f6e3ecd54345c6607e3163ae94a99eb638b61ac3268952bb98f233f4f5b9df
+    .cursor/skills/apihub-backend-developer/reference.md: sha256:d08ba648b698131f8295dac0cc478ee2176f73074ce049ed34f498f9bf3ba1bb
     .cursor/skills/apihub-backend-developer/scripts/check_migration_numbers.ps1: sha256:ed9be56dc607e1532310ed78f8ff141712c4cdb3c183c6e7a38deac2294e792b
     .cursor/skills/apihub-backend-developer/scripts/check_migration_numbers.sh: sha256:590bc854e8ecf7f0ab39489ca697a9f4c09dfd8a5c793ce3d3aac021e5c5dd7e
   source: local
@@ -135,9 +135,9 @@ dependencies:
   - .cursor/skills/apihub-backend-self-review/SKILL.md
   deployed_file_hashes:
     .claude/rules/apihub-backend-self-review.md: sha256:2fffda215b6b410a8514f763b49961aa2b6981294cf4021a40c0b2c64bdac8e1
-    .claude/skills/apihub-backend-self-review/SKILL.md: sha256:66212658ec8bbf72dc9b3a53a343ebd873cba31a6dbcc5e4c84702f9a77d6863
+    .claude/skills/apihub-backend-self-review/SKILL.md: sha256:382ac599b99961b9074ef918ba42b91f99bc924e19bd933400d35bced879e77c
     .cursor/rules/apihub-backend-self-review.mdc: sha256:98b726f91259ab4f581d1d677138c70b162200e1e0c251884964cf9e70dc3b3c
-    .cursor/skills/apihub-backend-self-review/SKILL.md: sha256:66212658ec8bbf72dc9b3a53a343ebd873cba31a6dbcc5e4c84702f9a77d6863
+    .cursor/skills/apihub-backend-self-review/SKILL.md: sha256:382ac599b99961b9074ef918ba42b91f99bc924e19bd933400d35bced879e77c
   source: local
   local_path: ./agent-packages/apihub-backend-self-review
 - repo_url: _local/apihub-deployment-authoring
@@ -160,11 +160,11 @@ dependencies:
     .claude/rules/apihub-deployment-authoring.md: sha256:0a0a4979862bd0692d7306e8607d40fb9db9af966ad3ac126014bb8e9c118e02
     .claude/rules/apihub-deployment-compose.md: sha256:a5e0edda84e593c59a7a2cdb023824e7aa2deb48958a2b6c144f3da1b16c3064
     .claude/rules/apihub-deployment-docs.md: sha256:d079e041da06cfa313bdb25e52b650f792e2d438e7c629c066b03aff067c3214
-    .claude/skills/apihub-deployment-authoring/SKILL.md: sha256:40100402534572d125738be23846b362977f4be76a5567eec14d0a23aa2d31e3
+    .claude/skills/apihub-deployment-authoring/SKILL.md: sha256:0dc55c54f1b74b46fb64d04700dfd64f407c1cfdfe86c664889a1286c0ba8e97
     .cursor/rules/apihub-deployment-authoring.mdc: sha256:4b081d9f7c303b9b26b16b1f3ba70da27a69e4fa5630f41ede7fcba35895fbc5
     .cursor/rules/apihub-deployment-compose.mdc: sha256:5e4085e6a9321a7e1e3c2df6054733ea1cf09138f961893e175833d7a8ac24b6
     .cursor/rules/apihub-deployment-docs.mdc: sha256:66ec8a67de0a5a9f37386b7a5cfaf8bd7d4147b2be056a9f401a072d2bab1d1d
-    .cursor/skills/apihub-deployment-authoring/SKILL.md: sha256:40100402534572d125738be23846b362977f4be76a5567eec14d0a23aa2d31e3
+    .cursor/skills/apihub-deployment-authoring/SKILL.md: sha256:0dc55c54f1b74b46fb64d04700dfd64f407c1cfdfe86c664889a1286c0ba8e97
   source: local
   local_path: ./agent-packages/apihub-deployment-authoring
 - repo_url: _local/apihub-deployment-followup
@@ -250,9 +250,9 @@ dependencies:
   - .cursor/skills/postman-e2e-authoring/SKILL.md
   deployed_file_hashes:
     .claude/rules/postman-e2e-authoring.md: sha256:1725011f7766ad69eb1c7b613e1d8c4551b70118be1ae43eaa99a2f1fea66641
-    .claude/skills/postman-e2e-authoring/SKILL.md: sha256:cb66c3675054ef4508aecb2bb5740af08f8cf0c2c258c6108080f649b5545c61
+    .claude/skills/postman-e2e-authoring/SKILL.md: sha256:3bc8ea84c2cd0e4df0a7197e62d01f55d6b44f5294379b3046821980344d7353
     .cursor/rules/postman-e2e-authoring.mdc: sha256:2a33f581bb97cbbd73797b885f04db1f1a74e68d88f6cf3669b992ab9ddf4a3c
-    .cursor/skills/postman-e2e-authoring/SKILL.md: sha256:cb66c3675054ef4508aecb2bb5740af08f8cf0c2c258c6108080f649b5545c61
+    .cursor/skills/postman-e2e-authoring/SKILL.md: sha256:3bc8ea84c2cd0e4df0a7197e62d01f55d6b44f5294379b3046821980344d7353
   source: local
   local_path: ./agent-packages/postman-e2e-authoring
 - repo_url: _local/postman-e2e-followup
@@ -871,7 +871,7 @@ deployments:
   owners:
   - ./agent-packages/advanced-verification
   active_owner: ./agent-packages/advanced-verification
-  content_hash: sha256:1abe25c8d7d934e23dfbbafe982dd7605d632a69223a27a068ac8029c50b0645
+  content_hash: sha256:6d57ae008dfaec5b7137dfa17feeede9d67925582045db84921f2bd6a8d9d6aa
 - kind: project-relative
   target: claude
   value: .claude/skills/advanced-verification/reference.md
@@ -880,7 +880,7 @@ deployments:
   owners:
   - ./agent-packages/advanced-verification
   active_owner: ./agent-packages/advanced-verification
-  content_hash: sha256:fb8c9774ed63eecd81e0b4732bcaa59ff1240137a2dca2603f08e18efe2adbf9
+  content_hash: sha256:5a2ae4c8d0e246a6f7de497c073a07774f505480468b45f41e15f636a4715bfd
 - kind: project-relative
   target: claude
   value: .claude/skills/api-diff-authoring
@@ -988,7 +988,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-backend-developer
   active_owner: ./agent-packages/apihub-backend-developer
-  content_hash: sha256:4e153557b1accff276e5eea474c801f98ccc7ea55b03528e23baf738c55ddcd5
+  content_hash: sha256:14f6e3ecd54345c6607e3163ae94a99eb638b61ac3268952bb98f233f4f5b9df
 - kind: project-relative
   target: claude
   value: .claude/skills/apihub-backend-developer/reference.md
@@ -997,7 +997,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-backend-developer
   active_owner: ./agent-packages/apihub-backend-developer
-  content_hash: sha256:48e75b4f542377eae1f71df79cffd0bf019668404df2c0bea64aeed29f035811
+  content_hash: sha256:d08ba648b698131f8295dac0cc478ee2176f73074ce049ed34f498f9bf3ba1bb
 - kind: project-relative
   target: claude
   value: .claude/skills/apihub-backend-developer/scripts/check_migration_numbers.ps1
@@ -1033,7 +1033,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-backend-self-review
   active_owner: ./agent-packages/apihub-backend-self-review
-  content_hash: sha256:66212658ec8bbf72dc9b3a53a343ebd873cba31a6dbcc5e4c84702f9a77d6863
+  content_hash: sha256:382ac599b99961b9074ef918ba42b91f99bc924e19bd933400d35bced879e77c
 - kind: project-relative
   target: claude
   value: .claude/skills/apihub-deployment-authoring
@@ -1051,7 +1051,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-deployment-authoring
   active_owner: ./agent-packages/apihub-deployment-authoring
-  content_hash: sha256:40100402534572d125738be23846b362977f4be76a5567eec14d0a23aa2d31e3
+  content_hash: sha256:0dc55c54f1b74b46fb64d04700dfd64f407c1cfdfe86c664889a1286c0ba8e97
 - kind: project-relative
   target: claude
   value: .claude/skills/apihub-deployment-followup
@@ -1222,7 +1222,7 @@ deployments:
   owners:
   - ./agent-packages/postman-e2e-authoring
   active_owner: ./agent-packages/postman-e2e-authoring
-  content_hash: sha256:cb66c3675054ef4508aecb2bb5740af08f8cf0c2c258c6108080f649b5545c61
+  content_hash: sha256:3bc8ea84c2cd0e4df0a7197e62d01f55d6b44f5294379b3046821980344d7353
 - kind: project-relative
   target: claude
   value: .claude/skills/postman-e2e-followup
@@ -1573,7 +1573,7 @@ deployments:
   owners:
   - ./agent-packages/advanced-verification
   active_owner: ./agent-packages/advanced-verification
-  content_hash: sha256:1abe25c8d7d934e23dfbbafe982dd7605d632a69223a27a068ac8029c50b0645
+  content_hash: sha256:6d57ae008dfaec5b7137dfa17feeede9d67925582045db84921f2bd6a8d9d6aa
 - kind: project-relative
   target: cursor
   value: .cursor/skills/advanced-verification/reference.md
@@ -1582,7 +1582,7 @@ deployments:
   owners:
   - ./agent-packages/advanced-verification
   active_owner: ./agent-packages/advanced-verification
-  content_hash: sha256:fb8c9774ed63eecd81e0b4732bcaa59ff1240137a2dca2603f08e18efe2adbf9
+  content_hash: sha256:5a2ae4c8d0e246a6f7de497c073a07774f505480468b45f41e15f636a4715bfd
 - kind: project-relative
   target: cursor
   value: .cursor/skills/api-diff-authoring
@@ -1690,7 +1690,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-backend-developer
   active_owner: ./agent-packages/apihub-backend-developer
-  content_hash: sha256:4e153557b1accff276e5eea474c801f98ccc7ea55b03528e23baf738c55ddcd5
+  content_hash: sha256:14f6e3ecd54345c6607e3163ae94a99eb638b61ac3268952bb98f233f4f5b9df
 - kind: project-relative
   target: cursor
   value: .cursor/skills/apihub-backend-developer/reference.md
@@ -1699,7 +1699,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-backend-developer
   active_owner: ./agent-packages/apihub-backend-developer
-  content_hash: sha256:48e75b4f542377eae1f71df79cffd0bf019668404df2c0bea64aeed29f035811
+  content_hash: sha256:d08ba648b698131f8295dac0cc478ee2176f73074ce049ed34f498f9bf3ba1bb
 - kind: project-relative
   target: cursor
   value: .cursor/skills/apihub-backend-developer/scripts/check_migration_numbers.ps1
@@ -1735,7 +1735,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-backend-self-review
   active_owner: ./agent-packages/apihub-backend-self-review
-  content_hash: sha256:66212658ec8bbf72dc9b3a53a343ebd873cba31a6dbcc5e4c84702f9a77d6863
+  content_hash: sha256:382ac599b99961b9074ef918ba42b91f99bc924e19bd933400d35bced879e77c
 - kind: project-relative
   target: cursor
   value: .cursor/skills/apihub-deployment-authoring
@@ -1753,7 +1753,7 @@ deployments:
   owners:
   - ./agent-packages/apihub-deployment-authoring
   active_owner: ./agent-packages/apihub-deployment-authoring
-  content_hash: sha256:40100402534572d125738be23846b362977f4be76a5567eec14d0a23aa2d31e3
+  content_hash: sha256:0dc55c54f1b74b46fb64d04700dfd64f407c1cfdfe86c664889a1286c0ba8e97
 - kind: project-relative
   target: cursor
   value: .cursor/skills/apihub-deployment-followup
@@ -1924,7 +1924,7 @@ deployments:
   owners:
   - ./agent-packages/postman-e2e-authoring
   active_owner: ./agent-packages/postman-e2e-authoring
-  content_hash: sha256:cb66c3675054ef4508aecb2bb5740af08f8cf0c2c258c6108080f649b5545c61
+  content_hash: sha256:3bc8ea84c2cd0e4df0a7197e62d01f55d6b44f5294379b3046821980344d7353
 - kind: project-relative
   target: cursor
   value: .cursor/skills/postman-e2e-followup

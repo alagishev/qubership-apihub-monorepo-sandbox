@@ -8,10 +8,10 @@ description: "Build the APIHub backend, start it locally with local_config, auth
 Verifies a backend change end-to-end against a real local instance: build, run, hit real HTTP
 endpoints via a Postman/Newman collection stored in `tests/api`, and iterate on failures.
 
-Complements, does not replace, `postman-e2e-followup` — that skill only reminds about follow-up
-in the **external** `qubership-apihub-postman-collections` repo. This skill runs in-repo
-verification only. For commands, config recipes, and a full collection example, see
-[reference.md](reference.md).
+Complements, does not replace, `postman-e2e-followup` — that skill covers the shared Newman
+suite under `qubership-apihub-postman-collections/`. This skill runs local backend verification
+with collections under `qubership-apihub-backend/tests/api/`. For commands, config recipes, and a
+full collection example, see [reference.md](reference.md).
 
 ## When to use
 
@@ -53,5 +53,6 @@ with no behavior change.
 
 7. **Stop the local service** when done; keep any temporary config copy out of git.
 
-8. Note in the completion summary that `postman-e2e-followup` is a separate, external-repo
-   concern — running this skill does not replace that reminder.
+8. Note in the completion summary that `postman-e2e-followup` still applies for the shared
+   suite under `qubership-apihub-postman-collections/` — running this skill does not replace
+   that reminder.

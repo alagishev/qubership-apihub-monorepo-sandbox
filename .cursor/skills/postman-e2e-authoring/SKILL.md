@@ -78,7 +78,8 @@ When adding a new regression collection, update any workflow callers that should
 
 Before changing requests or assertions:
 
-1. Read the canonical OpenAPI specs in **qubership-apihub-backend** (`docs/api/APIHUB_API.yaml`, `Admin API.yaml`, `APIHUB_API_internal.yaml` as applicable).
+1. Read the canonical OpenAPI specs under `qubership-apihub-backend/docs/api/`
+   (`APIHUB_API.yaml`, `Admin API.yaml`, `APIHUB_API_internal.yaml` as applicable).
 2. Match method, path, query, headers, and status codes to the spec; update request bodies when schemas change.
 3. See backend docs: [postman_collections.md](https://github.com/Netcracker/qubership-apihub-backend/blob/main/docs/postman_collections.md) and [related-repositories.md](https://github.com/Netcracker/qubership-apihub-backend/blob/main/docs/agent/related-repositories.md).
 

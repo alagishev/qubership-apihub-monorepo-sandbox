@@ -5,8 +5,10 @@ description: "Authors and updates APIHUB deployment assets in qubership-apihub: 
 
 # APIHub Deployment Authoring
 
-Follow `AGENTS.md`. This repository is the **umbrella deployment project** — application
-source code lives in sibling component repositories; do not implement Go/TS/UI features here.
+Follow `AGENTS.md`. Use this skill for **deployment assets** under `helm-templates/`,
+`docker-compose/`, and root `docs/` deployment guides. Application modules live in the same
+monorepo — when the task needs Go/TS/UI changes, work in the matching module path instead of
+forcing everything through Helm/Compose.
 
 ## Workflow
 
@@ -83,30 +85,31 @@ Do not treat Compose as replacing Helm for production install arguments.
 
 When adding or renaming a configuration knob:
 
-1. Confirm the **authoritative loader** in the component repo (`config.template.yaml` for backend, agent,
-   linter, and agents-backend; env-only for UI/builder).
+1. Confirm the **authoritative loader** in the component module (`config.template.yaml` for
+   backend, agent, linter, and agents-backend; env-only for UI/builder).
 2. Update **`docs/configuration-reference.md`** tables (Helm mapping, Compose file list,
    cross-cutting consistency).
 3. Link from **`docs/installation-guide.md`** when install steps change.
 4. Keep line length ≤ **120** characters in Markdown (deployed `markdown-line-length-120` rule).
 
-## Out of scope (redirect)
+## Out of scope for this skill
 
-| Change type | Where to work |
-|-------------|---------------|
-| REST API, backend logic | qubership-apihub-backend |
-| UI / Portal | qubership-apihub-ui |
-| Build worker | qubership-apihub-build-task-consumer |
-| Linter rules/engine code | qubership-api-linter-service |
-| Cluster agent discovery | qubership-apihub-agent |
-| Shared CI workflows / generic agent packages | qubership-apihub-ci |
+| Change type | Work under |
+|-------------|------------|
+| REST API, backend logic | `qubership-apihub-backend/` |
+| UI / Portal | `qubership-apihub-ui/` |
+| Build worker | `qubership-apihub-build-task-consumer/` |
+| Linter rules/engine code | `qubership-api-linter-service/` |
+| Shared Newman E2E collections | `qubership-apihub-postman-collections/` |
+| Shared CI workflows / generic agent packages | [qubership-apihub-ci](https://github.com/Netcracker/qubership-apihub-ci) |
 
-Remind the developer when a deployment change implies a follow-up PR in a component repository.
+When a deployment edit implies application-module follow-up, keep it in the same monorepo
+change-set when practical.
 
 ## Completion checklist
 
 - [ ] Helm values, templates, and/or Compose files updated consistently.
 - [ ] Token/URL/extension URLs aligned across affected files.
 - [ ] `docs/configuration-reference.md` (and guides if needed) updated.
-- [ ] No application source code added under this umbrella repo.
+- [ ] Application changes land in module paths, not under `helm-templates/` / `docker-compose/`.
 - [ ] For GitHub tickets, `github-ticket-implementation-planner` was used before coding when applicable.

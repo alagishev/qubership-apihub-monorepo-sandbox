@@ -28,7 +28,7 @@ This provisions Postgres with database/user/password `apihub`/`apihub`/`apihub`,
 ## Build and run
 
 ```bash
-cd qubership-apihub-service
+cd qubership-apihub-backend/qubership-apihub-service
 go build .
 ```
 
@@ -103,9 +103,9 @@ npx newman run tests/api/<slug>.postman_collection.json \
   --env-var apiKey=<zero-day token from local_config/config.yaml>
 ```
 
-There is no existing local Newman wrapper script in this repo — this is the first one; the
-external `qubership-apihub-postman-collections` repo's canonical E2E suite is run by a separate
-reusable CI workflow, not by this command.
+There is no existing local Newman wrapper script for `tests/api/` — this is the local
+verification path. The shared suite under `qubership-apihub-postman-collections/` is run by
+CI / `postman-e2e-authoring`, not by this command.
 
 ## Reading failures
 

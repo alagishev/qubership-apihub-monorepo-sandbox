@@ -152,7 +152,10 @@ See [`AGENTS.md`](AGENTS.md) and [`agent-packages/README.md`](agent-packages/REA
 
 ## Repository role
 
-This repository (**qubership-apihub**) is the **umbrella deployment project**: Helm charts, Compose stacks, and product-level documentation. Application source code lives in the component repositories linked above; reusable CI is in [qubership-apihub-ci](https://github.com/Netcracker/qubership-apihub-ci).
+This repository is the **APIHUB monorepo sandbox**: application modules
+(`qubership-apihub-backend/`, UI, npm libraries, Postman collections, and more) plus
+deployment assets (`helm-templates/`, `docker-compose/`, root `docs/`). Reusable shared CI
+workflows still live in [qubership-apihub-ci](https://github.com/Netcracker/qubership-apihub-ci).
 
 ---
 

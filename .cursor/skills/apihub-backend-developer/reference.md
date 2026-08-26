@@ -6,27 +6,26 @@ Read this file when you need backend-specific examples or doc-routing detail. Ke
 
 | Change type | Update |
 |-------------|--------|
-| New or changed REST contract | `docs/api/APIHUB_API.yaml` (+ Admin/Internal specs if applicable) |
-| New feature with design notes | `docs/feature_design/<area>/` (see `docs/README.md`) |
-| Operational / migration analysis | `docs/ops_migration_analysis_guide.md` |
-| Local dev setup change | `docs/local_development/` |
-| AI assistant behavior | `docs/feature_design/ai_assistant/` or `docs/static_resources_customization.md` |
+| New or changed REST contract | `qubership-apihub-backend/docs/api/APIHUB_API.yaml` (+ Admin/Internal specs if applicable) |
+| New feature with design notes | `qubership-apihub-backend/docs/feature_design/<area>/` (see `docs/README.md`) |
+| Operational / migration analysis | `qubership-apihub-backend/docs/ops_migration_analysis_guide.md` |
+| Local dev setup change | `qubership-apihub-backend/docs/local_development/` |
+| AI assistant behavior | `qubership-apihub-backend/docs/feature_design/ai_assistant/` or `docs/static_resources_customization.md` |
 | Minor implementation detail | Relevant existing guide only — **not** root `README.md` |
 
-Full index: `docs/README.md`.
+Full index: `qubership-apihub-backend/docs/README.md`.
 
-## Related repositories (Helm, E2E)
+## Related paths in this monorepo (Helm, E2E)
 
-See [`docs/agent/related-repositories.md`](../../../docs/agent/related-repositories.md). Agents cannot edit those repos unless they are in the workspace; **remind** the developer with links when:
+Prefer updating the matching paths in the same change-set. Use
+`apihub-deployment-followup` and `postman-e2e-followup` when the impact is unclear:
 
 | Backend change | Likely follow-up |
 |----------------|------------------|
-| New env var / secret / feature flag | Helm `values.yaml`, templates, ConfigMap/Secret |
+| New env var / secret / feature flag | `helm-templates/qubership-apihub/`, Compose env files, `docs/configuration-reference.md` |
 | New cron, probe, port, volume | Helm chart templates |
-| New/changed REST API | Postman collection repo + `docs/api/*.yaml` |
-| New auth or error contract | Postman assertions |
-
-Update placeholder Helm URL in `related-repositories.md` when your team's chart repo is known.
+| New/changed REST API | `qubership-apihub-postman-collections/` + `qubership-apihub-backend/docs/api/*.yaml` |
+| New auth or error contract | Postman assertions under `qubership-apihub-postman-collections/` |
 
 ## Error codes (`exception/ErrorCodes.go`)
 
