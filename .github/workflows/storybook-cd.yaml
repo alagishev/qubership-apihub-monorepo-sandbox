@@ -3,7 +3,8 @@ name: Storybook CD Workflow
 on:
   push:
     branches:
-      - "**"
+      - develop
+      - main
     paths:
       - "qubership-apihub-ui/**"
   delete: {}
