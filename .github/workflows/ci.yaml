@@ -253,7 +253,8 @@ jobs:
       ghcr-owner: ${{ github.repository_owner }}
       postman-repository-url: https://github.com/${{ github.repository }}.git
       postman-repository-branch: ${{ github.head_ref }}
-      postman-collections-list: ./qubership-apihub-postman-collections/e2e/1_1_Smoke_Portal.postman_collection.json,./qubership-apihub-postman-collections/e2e/1_3_Linter_Portal.postman_collection.json
+      postman-subdirectory: qubership-apihub-postman-collections
+      postman-collections-list: ./e2e/1_1_Smoke_Portal.postman_collection.json,./e2e/1_3_Linter_Portal.postman_collection.json
       apihub-backend-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'backend') && needs.detect-affected.outputs.feature_tag || 'dev' }}
       apihub-build-task-consumer-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'build-task-consumer') && needs.detect-affected.outputs.feature_tag || 'dev' }}
       apihub-ui-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'ui') && needs.detect-affected.outputs.feature_tag || 'dev' }}

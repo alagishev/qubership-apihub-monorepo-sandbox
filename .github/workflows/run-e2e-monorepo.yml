@@ -31,9 +31,16 @@ on:
       postman-repository-branch:
         type: string
         required: true
+      # Within the cloned postman repo: collections + environment/ live here in the monorepo.
+      postman-subdirectory:
+        type: string
+        default: qubership-apihub-postman-collections
       postman-collections-list:
         type: string
         required: true
+        description: >-
+          Comma-separated collection paths relative to postman-subdirectory
+          (e.g. ./e2e/1_1_Smoke_Portal.postman_collection.json)
       newman-timeout-request:
         type: number
         default: 120000
@@ -195,6 +202,12 @@ jobs:
         run: |
           git clone --branch ${{ inputs.postman-repository-branch }} --single-branch \
             ${{ inputs.postman-repository-url }} postman-repo
+          SUBDIR="${{ inputs.postman-subdirectory }}"
+          if [ -n "$SUBDIR" ]; then
+            echo "POSTMAN_ROOT=${{ github.workspace }}/postman-repo/$SUBDIR" >> "$GITHUB_ENV"
+          else
+            echo "POSTMAN_ROOT=${{ github.workspace }}/postman-repo" >> "$GITHUB_ENV"
+          fi
 
       - name: Prepare Newman environment
         if: ${{ inputs.postman-collections-run }}
@@ -204,13 +217,13 @@ jobs:
           APIHUB_ADMIN_PASSWORD: ${{ secrets.APIHUB_ADMIN_PASSWORD }}
           APIHUB_ACCESS_TOKEN: ${{ secrets.APIHUB_ACCESS_TOKEN }}
         run: |
-          cd postman-repo
+          cd "$POSTMAN_ROOT"
           envsubst < ./environment/local.postman_environment.json > ./ci.postman_environment.json
 
       - name: Run Postman collections
         if: ${{ inputs.postman-collections-run }}
         run: |
-          cd postman-repo
+          cd "$POSTMAN_ROOT"
           IFS=',' read -ra COLLECTIONS <<< "${{ inputs.postman-collections-list }}"
           mkdir -p reports
           for collection in "${COLLECTIONS[@]}"; do
@@ -227,7 +240,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: newman-reports
-          path: ${{ github.workspace }}/postman-repo/reports/*.html
+          path: ${{ env.POSTMAN_ROOT }}/reports/*.html
           retention-days: 7
 
       - name: Check Newman results
@@ -236,7 +249,7 @@ jobs:
         continue-on-error: true
         run: |
           TOTAL_FAILED=0
-          for file in ${{ github.workspace }}/postman-repo/reports/*.html; do
+          for file in "$POSTMAN_ROOT"/reports/*.html; do
             FAILED_TESTS=$(grep -A1 ' Total Failed Tests ' "$file" | grep -oP '(?<=)[0-9]+(?=)' || echo 0)
             TOTAL_FAILED=$((TOTAL_FAILED + FAILED_TESTS))
           done
