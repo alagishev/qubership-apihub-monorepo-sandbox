@@ -10,3 +10,11 @@
 #
 
 * @alagishev
+/qubership-api-linter-service/ @alagishev @viacheslav-lunev @karpov-aleksandr
+/qubership-apihub-agents-backend/ @alagishev @viacheslav-lunev @karpov-aleksandr
+/qubership-apihub-backend/ @alagishev @viacheslav-lunev @karpov-aleksandr
+/qubership-apihub-commons-go/ @alagishev @viacheslav-lunev @karpov-aleksandr
+/qubership-apihub-api-diff/ @b41ex
+/qubership-apihub-api-processor/ @b41ex
+/qubership-apihub-build-task-consumer/ @b41ex
+/qubership-apihub-ui/ @b41ex

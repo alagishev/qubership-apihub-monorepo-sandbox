@@ -1,13 +1,34 @@
-name: qubership-apihub
+name: qubership-apihub-monorepo
 version: 0.0.0
+description: Unified APM project for the APIHUB monorepo sandbox
 targets:
   - cursor
   - claude
 dependencies:
   apm:
+    # Shared stores
     - Netcracker/qubership-ai-packages/agent-packages/english-developer-style
     - Netcracker/qubership-ai-packages/agent-packages/markdown-line-length-120
     - Netcracker/qubership-apihub-ci/agent-packages/development-conventions
+    - Netcracker/qubership-apihub-ci/agent-packages/github-ticket-implementation-planner
+    - Netcracker/qubership-apihub-ci/agent-packages/go-conventions
+    - Netcracker/qubership-apihub-ci/agent-packages/apihub-go-developer
+    - Netcracker/qubership-apihub-ci/agent-packages/apihub-go-self-review
+    - Netcracker/qubership-apihub-ddlapi/agent-packages/ddlapi-using
+    - Netcracker/qubership-apihub-json-crawl/agent-packages/json-crawl-using
+    - Netcracker/qubership-apihub-api-doc-viewer/agent-packages/api-doc-viewer-using
+    # Local packages (sources under ./agent-packages)
+    - ./agent-packages/apihub-monorepo
     - ./agent-packages/apihub-deployment-authoring
-
-
+    - ./agent-packages/apihub-deployment-followup
+    - ./agent-packages/backend-conventions
+    - ./agent-packages/apihub-backend-developer
+    - ./agent-packages/apihub-backend-self-review
+    - ./agent-packages/advanced-verification
+    - ./agent-packages/postman-e2e-authoring
+    - ./agent-packages/postman-e2e-followup
+    - ./agent-packages/api-diff-authoring
+    - ./agent-packages/api-diff-testing
+    - ./agent-packages/api-processor-authoring
+    - ./agent-packages/api-processor-using
+    - ./agent-packages/apihub-ui-authoring

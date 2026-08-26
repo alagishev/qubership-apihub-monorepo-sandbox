@@ -129,18 +129,21 @@ More context: [Supplementary applications](https://github.com/Netcracker/qubersh
 
 ## AI agent configuration (APM)
 
-Agent context for deployment work is split between a **central store** and **this repository**:
+This monorepo uses a **single root APM project**. All local packages live under
+[`agent-packages/`](agent-packages/); modules do not have their own `apm.yml`.
 
 | Scope | Location |
 |-------|----------|
-| Generic skills/rules (planner, conventions, doc style) | [`qubership-apihub-ci/agent-packages`](https://github.com/Netcracker/qubership-apihub-ci/tree/main/agent-packages), [`qubership-ai-packages`](https://github.com/Netcracker/qubership-ai-packages/tree/main/agent-packages) |
-| Deployment-specific package | [`agent-packages/`](agent-packages/) |
-| Deployed harness output | `.cursor/` and `.claude/` (committed; refresh with APM) |
+| Generic skills/rules | [`qubership-apihub-ci/agent-packages`](https://github.com/Netcracker/qubership-apihub-ci/tree/main/agent-packages), [`qubership-ai-packages`](https://github.com/Netcracker/qubership-ai-packages/tree/main/agent-packages) |
+| Monorepo-local packages | [`agent-packages/`](agent-packages/) |
+| Deployed harness | `.cursor/`, `.claude/`, and compiled `AGENTS.md` (committed; refresh with APM) |
 
 From the repository root:
 
 ```bash
-apm install --target cursor,claude --legacy-skill-paths
+apm install --target cursor,claude --legacy-skill-paths --force
+# Move .worktrees/ outside the repo before compile if present (APM scans it).
+apm compile --target cursor,claude --legacy-skill-paths --single-agents --clean
 ```
 
 See [`AGENTS.md`](AGENTS.md) and [`agent-packages/README.md`](agent-packages/README.md).

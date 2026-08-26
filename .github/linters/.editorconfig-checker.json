@@ -1,0 +1,10 @@
+{
+  "exclude": [
+    "docs/api/",
+    "**/docs/api/",
+    "\\.(cursor|claude|agents)/",
+    "\\.github/(instructions|skills|prompts)/",
+    "agent-packages/",
+    "qubership-apihub-api-processor/test/projects/broken/"
+  ]
+}

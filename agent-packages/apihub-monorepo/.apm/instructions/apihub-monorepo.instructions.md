@@ -1,0 +1,33 @@
+---
+description: Monorepo orientation for qubership-apihub-monorepo-sandbox.
+applyTo: "**/*"
+---
+
+# Qubership APIHUB monorepo
+
+This repository is a **Bazel/pnpm/Go monorepo** that vendors the former sibling
+APIHUB component repositories as top-level modules.
+
+## Module map
+
+| Path | Kind |
+|------|------|
+| `qubership-apihub-backend/` | Go API Registry |
+| `qubership-api-linter-service/` | Go API linter |
+| `qubership-apihub-agents-backend/` | Go agents backend |
+| `qubership-apihub-commons-go/` | Shared Go library |
+| `qubership-apihub-ui/` | Portal UI (pnpm) |
+| `qubership-apihub-api-diff/` | npm API diff library |
+| `qubership-apihub-api-processor/` | npm API processor |
+| `qubership-apihub-build-task-consumer/` | npm build worker |
+| `qubership-apihub-postman-collections/` | Newman E2E collections |
+| `helm-templates/`, `docker-compose/`, `docs/` | Deployment and product docs |
+
+## Working rules
+
+- Prefer **repo-root** commands (`bazel`, `pnpm`, `go` via `go.work`).
+- GitHub Actions, Dependabot, CODEOWNERS, and super-linter live only under `/.github/`.
+- Agent packages live only under `/agent-packages/` and are installed from the root
+  `apm.yml`.
+- When a task spans modules (backend contract + Postman + Helm), keep changes in
+  **one** monorepo change-set instead of inventing cross-repo follow-ups.
