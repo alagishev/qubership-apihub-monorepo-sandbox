@@ -154,7 +154,7 @@ Agent context is split between a **central store** and **this repository**:
 | Scope | Location |
 |-------|----------|
 | Generic skills/rules (Go conventions, planner, …) | [`qubership-apihub-ci/agent-packages`](https://github.com/Netcracker/qubership-apihub-ci/tree/main/agent-packages) |
-| Backend-specific packages | [`agent-packages/`](agent-packages/) in this repo |
+| Backend-specific packages | [`agent-packages/`](../agent-packages/) at the monorepo root |
 | Deployed harness output | `.cursor/` and `.claude/` (committed; refresh with APM) |
 
 After changing package sources or `apm.yml`, refresh deployed harness files:
