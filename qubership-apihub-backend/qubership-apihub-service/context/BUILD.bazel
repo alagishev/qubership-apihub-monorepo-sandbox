@@ -5,5 +5,7 @@ go_library(
     srcs = ["SecurityContext.go"],
     importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/context",
     visibility = ["//visibility:public"],
-    deps = ["@com_github_shaj13_go_guardian_v2//auth:go_default_library"],
+    deps = [
+        "@com_github_shaj13_go_guardian_v2//auth:go_default_library",
+    ],
 )

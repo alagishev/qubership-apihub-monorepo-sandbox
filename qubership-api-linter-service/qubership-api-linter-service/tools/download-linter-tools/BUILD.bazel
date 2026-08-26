@@ -5,6 +5,7 @@ go_library(
     srcs = ["main.go"],
     importpath = "github.com/Netcracker/qubership-api-linter-service/tools/download-linter-tools",
     visibility = ["//visibility:private"],
+    deps = [],
 )
 
 go_binary(

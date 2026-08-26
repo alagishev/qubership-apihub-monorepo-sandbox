@@ -8,5 +8,7 @@ go_library(
     ],
     importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/migration/view",
     visibility = ["//visibility:public"],
-    deps = ["//qubership-apihub-backend/qubership-apihub-service/view"],
+    deps = [
+        "//qubership-apihub-backend/qubership-apihub-service/view",
+    ],
 )

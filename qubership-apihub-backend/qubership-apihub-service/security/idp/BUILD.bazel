@@ -9,4 +9,5 @@ go_library(
     ],
     importpath = "github.com/Netcracker/qubership-apihub-backend/qubership-apihub-service/security/idp",
     visibility = ["//visibility:public"],
+    deps = [],
 )
