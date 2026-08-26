@@ -41,12 +41,13 @@ jobs:
 
       - id: parse
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          INPUT_MODULE: ${{ github.event_name == 'workflow_call' && inputs.module_id || '' }}
-          INPUT_VERSION: ${{ github.event_name == 'workflow_call' && inputs.version || '' }}
+          # Called workflows keep the caller's event_name (e.g. workflow_dispatch),
+          # so detect reusable-call mode by whether module/version inputs are set.
+          INPUT_MODULE: ${{ inputs.module_id }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
           pip install pyyaml -q
-          if [[ "$EVENT_NAME" == "workflow_call" ]]; then
+          if [[ -n "$INPUT_MODULE" && -n "$INPUT_VERSION" ]]; then
             MODULE="$INPUT_MODULE"
             VERSION="$INPUT_VERSION"
           else
@@ -159,7 +160,7 @@ jobs:
           esac
 
       - name: Download generated module release notes
-        if: github.event_name == 'workflow_call'
+        if: inputs.module_id != ''
         continue-on-error: true
         uses: actions/download-artifact@v4
         with:
