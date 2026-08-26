@@ -145,14 +145,15 @@ jobs:
         if: needs.detect-affected.outputs.needs_npm == 'true'
         run: |
           MODULES='${{ needs.detect-affected.outputs.modules }}'
+          # Trailing "..." tells pnpm to build workspace dependencies first.
           echo "$MODULES" | jq -e 'index("api-diff")' >/dev/null && \
-            pnpm --filter "@netcracker/qubership-apihub-api-diff" run build
+            pnpm --filter "@netcracker/qubership-apihub-api-diff..." run build
           echo "$MODULES" | jq -e 'index("api-processor")' >/dev/null && \
-            pnpm --filter "@netcracker/qubership-apihub-api-processor" run build
+            pnpm --filter "@netcracker/qubership-apihub-api-processor..." run build
           echo "$MODULES" | jq -e 'index("build-task-consumer")' >/dev/null && \
-            pnpm --filter "@netcracker/qubership-apihub-build-task-consumer" run build
+            pnpm --filter "@netcracker/qubership-apihub-build-task-consumer..." run build
           echo "$MODULES" | jq -e 'index("ui")' >/dev/null && \
-            pnpm --filter "@netcracker/qubership-apihub-ui" run build
+            pnpm --filter "@netcracker/qubership-apihub-ui..." run build
 
   bazel-build-push:
     needs: [detect-affected, bazel-test]
