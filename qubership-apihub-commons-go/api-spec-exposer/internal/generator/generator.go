@@ -18,6 +18,7 @@ const (
 )
 
 func restMultiSpecPath(fileId string) string {
+	// restMultiSpecPath builds /v3/api-docs/{fileId} for multi-spec REST exposure.
 	return fmt.Sprintf(restMultiSpecPathPrefix, fileId)
 }
 
