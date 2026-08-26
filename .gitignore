@@ -29,3 +29,6 @@ agent-packages/**/build/
 __pycache__/
 *.py[cod]
 
+# Isolated git worktrees
+.worktrees/
+

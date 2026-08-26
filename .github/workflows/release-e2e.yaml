@@ -1,0 +1,128 @@
+name: End-to-end release
+
+on:
+  workflow_dispatch:
+    inputs:
+      sprint_name:
+        description: Sprint name used for global release notes
+        required: true
+        type: string
+      release_mode:
+        description: Release changed modules only, or every module
+        required: true
+        type: choice
+        default: changed
+        options:
+          - changed
+          - all
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: e2e-release
+  cancel-in-progress: false
+
+jobs:
+  compute-plan:
+    runs-on: ubuntu-latest
+    outputs:
+      has_releases: ${{ steps.plan.outputs.has_releases }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      next_global_version: ${{ steps.plan.outputs.next_global_version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Python dependencies
+        run: pip install pyyaml -q
+
+      - name: Compute release plan
+        id: plan
+        run: |
+          python3 -m tools.ci.compute_release_plan \
+            --release-mode "${{ inputs.release_mode }}" \
+            --output release-plan.json
+          python3 -m tools.ci.generate_component_release_notes \
+            --plan-file release-plan.json \
+            --output-dir module-notes
+          HAS="$(python3 -c "import json; print('true' if json.load(open('release-plan.json'))['modules'] else 'false')")"
+          MATRIX="$(python3 -c "import json; print(json.dumps({'include': json.load(open('release-plan.json'))['matrix']}))")"
+          NEXT="$(python3 -c "import json; print(json.load(open('release-plan.json')).get('next_global_version') or '')")"
+          echo "has_releases=$HAS" >> "$GITHUB_OUTPUT"
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "next_global_version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Release plan:"
+          cat release-plan.json
+          if [[ "$HAS" != "true" ]]; then
+            echo "No modules selected for release."
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-plan
+          path: release-plan.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: module-release-notes
+          path: module-notes/
+
+  release-modules:
+    needs: compute-plan
+    if: needs.compute-plan.outputs.has_releases == 'true'
+    strategy:
+      fail-fast: true
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.compute-plan.outputs.matrix) }}
+    uses: ./.github/workflows/release.yaml
+    with:
+      module_id: ${{ matrix.module_id }}
+      version: ${{ matrix.version }}
+    secrets: inherit
+
+  create-global-release:
+    needs: [compute-plan, release-modules]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Install Python dependencies
+        run: pip install pyyaml -q
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-plan
+          path: .
+
+      - name: Generate global release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_PROJECT_TOKEN: ${{ secrets.GH_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_PROJECT_URL: ${{ vars.GITHUB_PROJECT_URL }}
+        run: |
+          python3 -m tools.ci.generate_global_release_notes \
+            --sprint-name "${{ inputs.sprint_name }}" \
+            --plan-file release-plan.json \
+            --output global-release-notes.md
+          echo "Global release notes:"
+          cat global-release-notes.md
+
+      - name: Create global GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.compute-plan.outputs.next_global_version }}
+        run: |
+          gh release create "$VERSION" \
+            --title "$VERSION" \
+            --notes-file global-release-notes.md \
+            --target "${{ github.sha }}"

@@ -1,6 +1,16 @@
 name: Release
 
 on:
+  workflow_call:
+    inputs:
+      module_id:
+        description: Module ID from tools/modules.yaml
+        required: true
+        type: string
+      version:
+        description: Semantic version without a leading v
+        required: true
+        type: string
   push:
     tags:
       - "commons-go/v*"
@@ -18,24 +28,36 @@ permissions:
 
 jobs:
   parse-tag:
+    if: github.event_name != 'push' || github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     outputs:
       module_id: ${{ steps.parse.outputs.module_id }}
       version: ${{ steps.parse.outputs.version }}
       kind: ${{ steps.parse.outputs.kind }}
       oci_push: ${{ steps.parse.outputs.oci_push }}
+      tag_name: ${{ steps.parse.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
 
       - id: parse
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_MODULE: ${{ github.event_name == 'workflow_call' && inputs.module_id || '' }}
+          INPUT_VERSION: ${{ github.event_name == 'workflow_call' && inputs.version || '' }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          MODULE="${TAG%%/*}"
-          VERSION="${TAG#*/}"
-          VERSION="${VERSION#v}"
+          pip install pyyaml -q
+          if [[ "$EVENT_NAME" == "workflow_call" ]]; then
+            MODULE="$INPUT_MODULE"
+            VERSION="$INPUT_VERSION"
+          else
+            TAG="${GITHUB_REF_NAME}"
+            MODULE="${TAG%%/*}"
+            VERSION="${TAG#*/}"
+            VERSION="${VERSION#v}"
+          fi
           echo "module_id=$MODULE" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          pip install pyyaml -q
+          echo "tag_name=${MODULE}/v${VERSION}" >> "$GITHUB_OUTPUT"
           KIND="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['${MODULE}']['kind'])")"
           echo "kind=$KIND" >> "$GITHUB_OUTPUT"
           OCI="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['${MODULE}'].get('oci_push',''))")"
@@ -46,6 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: bazel-contrib/setup-bazel@0.19.0
         with:
@@ -78,9 +103,10 @@ jobs:
         if: needs.parse-tag.outputs.kind == 'go-lib'
         run: |
           MODULE="${{ needs.parse-tag.outputs.module_id }}"
+          TAG_NAME="${{ needs.parse-tag.outputs.tag_name }}"
           PATH_DIR="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE']['path'])")"
           mkdir -p artifacts
-          tar -czf "artifacts/qubership-apihub-${MODULE}-${{ github.ref_name }}.tar.gz" \
+          tar -czf "artifacts/qubership-apihub-${MODULE}-${TAG_NAME}.tar.gz" \
             --exclude='.git' --exclude='bazel-*' -C "$PATH_DIR" .
 
       - name: Publish npm package
@@ -132,17 +158,49 @@ jobs:
               ;;
           esac
 
+      - name: Download generated module release notes
+        if: github.event_name == 'workflow_call'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: module-release-notes
+          path: module-notes
+
+      - name: Prepare release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pip install pyyaml -q
+          MODULE="${{ needs.parse-tag.outputs.module_id }}"
+          TAG_NAME="${{ needs.parse-tag.outputs.tag_name }}"
+          VERSION="${{ needs.parse-tag.outputs.version }}"
+          if [[ -f "module-notes/${MODULE}.md" ]]; then
+            cp "module-notes/${MODULE}.md" release-notes.md
+          else
+            PATH_DIR="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE']['path'])")"
+            IMAGE="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE'].get('image') or '')")"
+            python3 -m tools.ci.generate_component_release_notes \
+              --module-id "$MODULE" \
+              --next-tag "$TAG_NAME" \
+              --module-path "$PATH_DIR" \
+              --version "$VERSION" \
+              --image "$IMAGE" \
+              --output release-notes.md
+          fi
+
       - name: GitHub Release (go-lib tarball)
         if: needs.parse-tag.outputs.kind == 'go-lib'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.parse-tag.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
           files: artifacts/*
-          generate_release_notes: true
+          body_path: release-notes.md
 
       - name: GitHub Release
         if: needs.parse-tag.outputs.kind != 'go-lib'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
+          tag_name: ${{ needs.parse-tag.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          body_path: release-notes.md
