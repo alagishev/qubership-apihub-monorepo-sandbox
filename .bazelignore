@@ -9,3 +9,10 @@ apm_modules
 .agents
 .qubership
 node_modules
+qubership-apihub-api-diff/node_modules
+qubership-apihub-api-processor/node_modules
+qubership-apihub-build-task-consumer/node_modules
+qubership-apihub-ui/node_modules
+qubership-apihub-ui/packages/agents/node_modules
+qubership-apihub-ui/packages/portal/node_modules
+qubership-apihub-ui/packages/shared/node_modules

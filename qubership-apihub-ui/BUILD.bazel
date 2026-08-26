@@ -1,11 +1,18 @@
-# Sandbox CI: package smoke test (no private npm registry / hermetic node_modules yet).
+# UI image is built/pushed via Dockerfile.local (see tools/ci/docker_push_npm.sh).
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files([
+    "package.json",
+    "Dockerfile.local",
+])
+
 sh_test(
-    name = "test",
+    name = "dockerfile_present",
     size = "small",
-    srcs = ["ci_smoke_test.sh"],
-    args = ["$(location package.json)"],
-    data = ["package.json"],
+    srcs = ["ci_image_contract_test.sh"],
+    data = [
+        "Dockerfile.local",
+        "package.json",
+    ],
 )

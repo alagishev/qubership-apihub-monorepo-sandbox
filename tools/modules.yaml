@@ -34,7 +34,8 @@ modules:
     bazel: //qubership-apihub-build-task-consumer/...
     release_tag: build-task-consumer/v
     image: ghcr.io/netcracker/qubership-apihub-build-task-consumer
-    # TODO(npm-oci): restore oci_push when hermetic rules_js image build works
+    # Docker push via Dockerfile.local after pnpm build (see tools/ci/docker_push_npm.sh).
+    oci_push: docker:build-task-consumer
     e2e_profile: compose
 
   ui:
@@ -43,7 +44,7 @@ modules:
     bazel: //qubership-apihub-ui/...
     release_tag: ui/v
     image: ghcr.io/netcracker/qubership-apihub-ui
-    # TODO(npm-oci): restore oci_push when hermetic rules_js/Vite image build works
+    oci_push: docker:ui
     e2e_profile: compose-playwright
 
   backend:

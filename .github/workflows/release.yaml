@@ -88,13 +88,10 @@ jobs:
         run: |
           MODULE="${{ needs.parse-tag.outputs.module_id }}"
           case "$MODULE" in
-            api-diff) bazel run //qubership-apihub-api-diff:build ;;
-            api-processor) bazel run //qubership-apihub-api-processor:build_vite ;;
-            build-task-consumer) bazel run //qubership-apihub-build-task-consumer:nest_build ;;
-            ui)
-              bazel run //qubership-apihub-ui:build_portal
-              bazel run //qubership-apihub-ui:build_agents
-              ;;
+            api-diff) pnpm --filter "@netcracker/qubership-apihub-api-diff" run build ;;
+            api-processor) pnpm --filter "@netcracker/qubership-apihub-api-processor" run build ;;
+            build-task-consumer) pnpm --filter "@netcracker/qubership-apihub-build-task-consumer" run build ;;
+            ui) pnpm --filter "@netcracker/qubership-apihub-ui" run build ;;
           esac
           PATH_DIR="$(python3 -c "import yaml; print(yaml.safe_load(open('tools/modules.yaml'))['modules']['$MODULE']['path'])")"
           cd "$PATH_DIR"
@@ -102,7 +99,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Push OCI image
+      - name: Log in to GHCR
         if: needs.parse-tag.outputs.oci_push != ''
         uses: docker/login-action@v3
         with:
@@ -110,9 +107,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Bazel oci_push
+      - name: Push OCI image
         if: needs.parse-tag.outputs.oci_push != ''
-        run: bazel run --config=release "${{ needs.parse-tag.outputs.oci_push }}" -- --tag "v${{ needs.parse-tag.outputs.version }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          MODULE="${{ needs.parse-tag.outputs.module_id }}"
+          OCI="${{ needs.parse-tag.outputs.oci_push }}"
+          VERSION="v${{ needs.parse-tag.outputs.version }}"
+          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          case "$OCI" in
+            docker:build-task-consumer)
+              echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> \
+                qubership-apihub-build-task-consumer/.npmrc
+              bash tools/ci/docker_push_npm.sh build-task-consumer \
+                "ghcr.io/${OWNER_LC}/qubership-apihub-build-task-consumer" "$VERSION"
+              ;;
+            docker:ui)
+              bash tools/ci/docker_push_npm.sh ui \
+                "ghcr.io/${OWNER_LC}/qubership-apihub-ui" "$VERSION"
+              ;;
+            *)
+              bazel run --config=release "$OCI" -- --tag "$VERSION"
+              ;;
+          esac
 
       - name: GitHub Release (go-lib tarball)
         if: needs.parse-tag.outputs.kind == 'go-lib'

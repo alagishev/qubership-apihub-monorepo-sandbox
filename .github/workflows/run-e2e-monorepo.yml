@@ -1,0 +1,295 @@
+# E2E for this monorepo (fork-aware GHCR owner).
+# Same flow as netcracker/qubership-apihub-ci run-e2e-tests.yml, plus rewriting
+# ghcr.io/netcracker/ -> ghcr.io/<owner>/ so feature images from the fork resolve.
+name: run E2E tests (monorepo)
+
+on:
+  workflow_call:
+    inputs:
+      compose-repository-url:
+        type: string
+        required: true
+      compose-repository-branch:
+        type: string
+        required: true
+      compose-repository-compose-folder:
+        type: string
+        default: docker-compose/apihub-generic
+      compose-repository-compose-file:
+        type: string
+        default: docker-compose.yml
+      ghcr-owner:
+        description: GHCR namespace that hosts feature images (usually repository owner)
+        type: string
+        required: true
+      postman-collections-run:
+        type: boolean
+        default: true
+      postman-repository-url:
+        type: string
+        required: true
+      postman-repository-branch:
+        type: string
+        required: true
+      postman-collections-list:
+        type: string
+        required: true
+      newman-timeout-request:
+        type: number
+        default: 120000
+      newman-timeout-collection:
+        type: number
+        default: 1800000
+      playwright-tests-run:
+        type: boolean
+        default: true
+      playwright-repository-url:
+        type: string
+        default: https://github.com/Netcracker/qubership-apihub-ui-tests
+      playwright-repository-branch:
+        type: string
+        default: main
+      playwright-test-args:
+        type: string
+        default: --project=Portal --workers=8 --grep-invert=@flaky
+      apihub-backend-image-tag:
+        type: string
+        default: dev
+      apihub-build-task-consumer-image-tag:
+        type: string
+        default: dev
+      apihub-ui-image-tag:
+        type: string
+        default: dev
+      apihub-api-linter-service-image-tag:
+        type: string
+        default: dev
+      apihub-agents-backend-image-tag:
+        type: string
+        default: dev
+      job-timeout-minutes:
+        type: number
+        default: 120
+    secrets:
+      JWT_PRIVATE_KEY:
+        required: true
+      APIHUB_ADMIN_EMAIL:
+        required: true
+      APIHUB_ADMIN_PASSWORD:
+        required: true
+      APIHUB_ACCESS_TOKEN:
+        required: true
+
+jobs:
+  run_compose_and_run_tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.job-timeout-minutes }}
+    steps:
+      - name: Clone compose repository
+        run: |
+          git clone --branch ${{ inputs.compose-repository-branch }} --single-branch \
+            ${{ inputs.compose-repository-url }} compose-repo
+
+      - name: Install Podman and envsubst
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman podman-compose gettext-base
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://npm.pkg.github.com/
+
+      - name: Template .env and config.yaml files
+        env:
+          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+          APIHUB_ADMIN_EMAIL: ${{ secrets.APIHUB_ADMIN_EMAIL }}
+          APIHUB_ADMIN_PASSWORD: ${{ secrets.APIHUB_ADMIN_PASSWORD }}
+          APIHUB_ACCESS_TOKEN: ${{ secrets.APIHUB_ACCESS_TOKEN }}
+        run: |
+          cd compose-repo
+          find . -name "*.env" -print0 | while IFS= read -r -d '' env_file; do
+            envsubst < "$env_file" > "${env_file}.tmp"
+            mv "${env_file}.tmp" "$env_file"
+          done
+          cd ${{ inputs.compose-repository-compose-folder }}
+          find . -name "*config.yaml" -print0 | while IFS= read -r -d '' config_file; do
+            envsubst < "$config_file" > "${config_file}.tmp"
+            mv "${config_file}.tmp" "$config_file"
+          done
+
+      - name: Substitute GHCR owner and image tags in compose
+        env:
+          OWNER: ${{ inputs.ghcr-owner }}
+          TAG_BACKEND: ${{ inputs.apihub-backend-image-tag }}
+          TAG_BTC: ${{ inputs.apihub-build-task-consumer-image-tag }}
+          TAG_UI: ${{ inputs.apihub-ui-image-tag }}
+          TAG_LINTER: ${{ inputs.apihub-api-linter-service-image-tag }}
+          TAG_AGENTS: ${{ inputs.apihub-agents-backend-image-tag }}
+        run: |
+          OWNER_LC="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          cd compose-repo/${{ inputs.compose-repository-compose-folder }}
+          FILE="./${{ inputs.compose-repository-compose-file }}"
+          # Feature tags live on the fork GHCR; stable tags (dev/next) stay on Netcracker.
+          rewrite() {
+            local image="$1"
+            local tag="$2"
+            local repo="netcracker"
+            if [[ "$tag" != "dev" && "$tag" != "next" ]]; then
+              repo="$OWNER_LC"
+            fi
+            sed -i "s|ghcr.io/netcracker/${image}:[^ ]*|ghcr.io/${repo}/${image}:${tag}|g" "$FILE"
+          }
+          rewrite "qubership-apihub-backend" "$TAG_BACKEND"
+          rewrite "qubership-apihub-build-task-consumer" "$TAG_BTC"
+          rewrite "qubership-apihub-ui" "$TAG_UI"
+          rewrite "qubership-api-linter-service" "$TAG_LINTER"
+          rewrite "qubership-apihub-agents-backend" "$TAG_AGENTS"
+          echo "Compose images:"
+          grep 'image:' "$FILE"
+
+      - name: Log in to GHCR (pull feature images)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run podman-compose up
+        run: |
+          cd compose-repo/${{ inputs.compose-repository-compose-folder }}
+          podman-compose -f ${{ inputs.compose-repository-compose-file }} up -d
+
+      - name: Start container log collection
+        run: |
+          podman logs -f qubership-apihub-backend > ./qubership-apihub-backend.log 2>&1 &
+          podman logs -f postgres > ./postgres.log 2>&1 &
+          podman logs -f qubership-apihub-ui > ./qubership-apihub-ui.log 2>&1 &
+          podman logs -f qubership-apihub-build-task-consumer > ./qubership-apihub-build-task-consumer.log 2>&1 &
+          podman logs -f qubership-api-linter-service > ./qubership-api-linter-service.log 2>&1 &
+          podman logs -f qubership-apihub-agents-backend > ./qubership-apihub-agents-backend.log 2>&1 &
+
+      - name: Wait for APIHUB startup
+        run: |
+          echo "Waiting for http://localhost:8081/login to return 200..."
+          end_time=$((SECONDS + 180))
+          while [ $SECONDS -lt $end_time ]; do
+            status_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/login || true)
+            if [ "$status_code" -eq 200 ]; then
+              echo "Received HTTP 200!"
+              exit 0
+            fi
+            echo "Received HTTP $status_code. Retrying in 5 seconds..."
+            sleep 5
+          done
+          echo "Timeout waiting for UI login"
+          exit 1
+
+      - name: Install Newman
+        if: ${{ inputs.postman-collections-run }}
+        run: npm install -g newman newman-reporter-htmlextra
+
+      - name: Clone postman collections
+        if: ${{ inputs.postman-collections-run }}
+        run: |
+          git clone --branch ${{ inputs.postman-repository-branch }} --single-branch \
+            ${{ inputs.postman-repository-url }} postman-repo
+
+      - name: Prepare Newman environment
+        if: ${{ inputs.postman-collections-run }}
+        env:
+          JWT_PRIVATE_KEY: ${{ secrets.JWT_PRIVATE_KEY }}
+          APIHUB_ADMIN_EMAIL: ${{ secrets.APIHUB_ADMIN_EMAIL }}
+          APIHUB_ADMIN_PASSWORD: ${{ secrets.APIHUB_ADMIN_PASSWORD }}
+          APIHUB_ACCESS_TOKEN: ${{ secrets.APIHUB_ACCESS_TOKEN }}
+        run: |
+          cd postman-repo
+          envsubst < ./environment/local.postman_environment.json > ./ci.postman_environment.json
+
+      - name: Run Postman collections
+        if: ${{ inputs.postman-collections-run }}
+        run: |
+          cd postman-repo
+          IFS=',' read -ra COLLECTIONS <<< "${{ inputs.postman-collections-list }}"
+          mkdir -p reports
+          for collection in "${COLLECTIONS[@]}"; do
+            sanitized=$(echo "$collection" | tr -d './')
+            newman run "$collection" -e ./ci.postman_environment.json -x \
+              --timeout ${{ inputs.newman-timeout-collection }} \
+              --timeout-request ${{ inputs.newman-timeout-request }} \
+              --reporters cli,htmlextra \
+              --reporter-htmlextra-export "./reports/${sanitized}_results.html"
+          done
+
+      - name: Upload Newman reports
+        if: ${{ inputs.postman-collections-run }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: newman-reports
+          path: ${{ github.workspace }}/postman-repo/reports/*.html
+          retention-days: 7
+
+      - name: Check Newman results
+        id: check_newman_tests
+        if: ${{ inputs.postman-collections-run }}
+        continue-on-error: true
+        run: |
+          TOTAL_FAILED=0
+          for file in ${{ github.workspace }}/postman-repo/reports/*.html; do
+            FAILED_TESTS=$(grep -A1 ' Total Failed Tests ' "$file" | grep -oP '(?<=)[0-9]+(?=)' || echo 0)
+            TOTAL_FAILED=$((TOTAL_FAILED + FAILED_TESTS))
+          done
+          if [ "$TOTAL_FAILED" -ne 0 ]; then exit 1; fi
+
+      - name: Clone Playwright tests
+        if: ${{ inputs.playwright-tests-run }}
+        run: |
+          BRANCH="${{ inputs.playwright-repository-branch }}"
+          if ! git ls-remote --heads ${{ inputs.playwright-repository-url }} "refs/heads/$BRANCH" | grep -q "$BRANCH"; then
+            BRANCH="develop"
+          fi
+          git clone --branch "$BRANCH" --single-branch ${{ inputs.playwright-repository-url }} playwright-repo
+
+      - name: Install Playwright
+        if: ${{ inputs.playwright-tests-run }}
+        working-directory: ./playwright-repo
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright tests
+        id: run_playwright_tests
+        if: ${{ inputs.playwright-tests-run }}
+        continue-on-error: true
+        working-directory: ./playwright-repo
+        env:
+          BASE_URL: http://localhost:8081
+          TEST_USER_PASSWORD: ${{ secrets.APIHUB_ADMIN_PASSWORD }}
+          PLAYGROUND_BACKEND_HOST: http://host.docker.internal:8081
+          CLEAR_TD: skip
+        run: npx playwright test ${{ inputs.playwright-test-args }}
+
+      - name: Upload Playwright reports
+        if: ${{ inputs.playwright-tests-run }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-reports
+          path: ${{ github.workspace }}/playwright-repo/reports
+          retention-days: 7
+
+      - name: Upload container logs
+        uses: actions/upload-artifact@v7
+        with:
+          name: containers-logs
+          path: ${{ github.workspace }}/*.log
+          retention-days: 7
+
+      - name: Fail if tests failed
+        run: |
+          if [ "${{ steps.check_newman_tests.outcome }}" == "failure" ] || \
+             [ "${{ steps.run_playwright_tests.outcome }}" == "failure" ]; then
+            exit 1
+          fi
