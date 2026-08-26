@@ -37,7 +37,7 @@ jobs:
       oci_push: ${{ steps.parse.outputs.oci_push }}
       tag_name: ${{ steps.parse.outputs.tag_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - id: parse
         env:
@@ -68,7 +68,7 @@ jobs:
     needs: parse-tag
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true

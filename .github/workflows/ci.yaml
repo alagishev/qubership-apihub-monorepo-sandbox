@@ -32,7 +32,7 @@ jobs:
       needs_npm: ${{ steps.detect.outputs.needs_npm }}
       needs_go: ${{ steps.detect.outputs.needs_go }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -82,7 +82,7 @@ jobs:
     if: needs.detect-affected.outputs.bazel_targets != '[]'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: bazel-contrib/setup-bazel@0.19.0
         with:
@@ -163,7 +163,7 @@ jobs:
       (needs.bazel-test.result == 'success' || needs.bazel-test.result == 'skipped')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: bazel-contrib/setup-bazel@0.19.0
         with:
