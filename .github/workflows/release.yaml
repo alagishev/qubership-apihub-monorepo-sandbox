@@ -191,7 +191,7 @@ jobs:
 
       - name: GitHub Release (go-lib tarball)
         if: needs.parse-tag.outputs.kind == 'go-lib'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.parse-tag.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
@@ -200,7 +200,7 @@ jobs:
 
       - name: GitHub Release
         if: needs.parse-tag.outputs.kind != 'go-lib'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.parse-tag.outputs.tag_name }}
           target_commitish: ${{ github.sha }}
