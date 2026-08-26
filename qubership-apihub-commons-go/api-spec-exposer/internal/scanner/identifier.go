@@ -111,12 +111,18 @@ func generateFileId(path string) string {
 	return slug.Make(name)
 }
 
+const (
+	xApiKindBWC    = "BWC"
+	xApiKindNoBWC  = "no-BWC"
+	internalSuffix = "_internal"
+)
+
 func getXApiKind(path string) string {
 	name := getFileName(path)
-	if strings.HasSuffix(name, "_internal") {
-		return "no-BWC"
+	if strings.HasSuffix(name, internalSuffix) {
+		return xApiKindNoBWC
 	}
-	return "BWC"
+	return xApiKindBWC
 }
 
 func getString(data map[string]interface{}, key string) string {
