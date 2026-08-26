@@ -19,8 +19,22 @@ jobs:
       statuses: write
     runs-on: ubuntu-latest
     steps:
+      - name: Skip when CLA_ACCESS_TOKEN is not configured
+        id: gate
+        env:
+          CLA_ACCESS_TOKEN: ${{ secrets.CLA_ACCESS_TOKEN }}
+        run: |
+          if [[ -z "${CLA_ACCESS_TOKEN}" ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "CLA_ACCESS_TOKEN is not set; skipping CLA check (sandbox/fork)."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: "CLA Assistant"
-        if: (github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target'
+        if: |
+          steps.gate.outputs.skip != 'true' &&
+          ((github.event.comment.body == 'recheck' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request_target')
         uses: contributor-assistant/github-action@v2.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

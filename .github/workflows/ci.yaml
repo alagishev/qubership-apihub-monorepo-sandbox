@@ -43,6 +43,7 @@ jobs:
         id: detect
         env:
           FEATURE_TAG: ${{ github.event_name == 'pull_request' && format('pull-{0}-merge', github.event.number) || '' }}
+          GITHUB_EVENT_NUMBER: ${{ github.event.number }}
         run: |
           BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
           if [[ -z "$BASE" || "$BASE" == "0000000000000000000000000000000000000000" ]]; then
