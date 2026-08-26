@@ -93,7 +93,7 @@ jobs:
         with:
           go-version: "1.26.5"
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: needs.detect-affected.outputs.needs_npm == 'true'
 
       - uses: actions/setup-node@v4
@@ -174,7 +174,7 @@ jobs:
         with:
           go-version: "1.26.5"
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         if: needs.detect-affected.outputs.needs_npm == 'true'
 
       - uses: actions/setup-node@v4
