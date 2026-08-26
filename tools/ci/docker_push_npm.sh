@@ -14,7 +14,7 @@ case "$MODULE" in
   build-task-consumer)
     PKG="qubership-apihub-build-task-consumer"
     echo "Building $PKG (nest)..."
-    pnpm --filter "@netcracker/qubership-apihub-build-task-consumer" run build
+    pnpm --filter "@netcracker/qubership-apihub-build-task-consumer..." run build
     echo "Docker build+push $IMAGE:$TAG"
     docker build -f "$PKG/Dockerfile.local" -t "$IMAGE:$TAG" "$PKG"
     docker push "$IMAGE:$TAG"
@@ -22,7 +22,7 @@ case "$MODULE" in
   ui)
     PKG="qubership-apihub-ui"
     echo "Building $PKG (lerna)..."
-    pnpm --filter "@netcracker/qubership-apihub-ui" run build
+    pnpm --filter "@netcracker/qubership-apihub-ui..." run build
     echo "Docker build+push $IMAGE:$TAG"
     docker build -f "$PKG/Dockerfile.local" -t "$IMAGE:$TAG" "$PKG"
     docker push "$IMAGE:$TAG"
