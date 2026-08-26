@@ -93,8 +93,22 @@ jobs:
         with:
           go-version: "1.26.5"
 
-      # npm package smoke tests are sh_test and need no pnpm/private registry.
-      # Use go-only so Bazel skips the root-module npm extension (dev_dependency).
+      - uses: pnpm/action-setup@v4
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+
+      - uses: actions/setup-node@v4
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: pnpm install
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          pnpm install --frozen-lockfile
 
       - name: Bazel test Go libraries
         if: needs.detect-affected.outputs.needs_go == 'true'
@@ -127,14 +141,18 @@ jobs:
           MODULES='${{ needs.detect-affected.outputs.modules }}'
           python3 tools/ci/go_work_compile.py "$MODULES"
 
-      - name: Bazel test npm package smoke targets
+      - name: Build affected npm packages
         if: needs.detect-affected.outputs.needs_npm == 'true'
         run: |
-          TARGETS='${{ needs.detect-affected.outputs.bazel_targets }}'
-          NPM=$(echo "$TARGETS" | jq -r '.[] | select(test("api-diff|api-processor|build-task-consumer|apihub-ui"))')
-          if [[ -n "$NPM" ]]; then
-            bazel test --config=ci --config=go-only --test_output=errors $NPM
-          fi
+          MODULES='${{ needs.detect-affected.outputs.modules }}'
+          echo "$MODULES" | jq -e 'index("api-diff")' >/dev/null && \
+            pnpm --filter "@netcracker/qubership-apihub-api-diff" run build
+          echo "$MODULES" | jq -e 'index("api-processor")' >/dev/null && \
+            pnpm --filter "@netcracker/qubership-apihub-api-processor" run build
+          echo "$MODULES" | jq -e 'index("build-task-consumer")' >/dev/null && \
+            pnpm --filter "@netcracker/qubership-apihub-build-task-consumer" run build
+          echo "$MODULES" | jq -e 'index("ui")' >/dev/null && \
+            pnpm --filter "@netcracker/qubership-apihub-ui" run build
 
   bazel-build-push:
     needs: [detect-affected, bazel-test]
@@ -155,6 +173,26 @@ jobs:
         with:
           go-version: "1.26.5"
 
+      - uses: pnpm/action-setup@v4
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+
+      - uses: actions/setup-node@v4
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - name: pnpm install (for npm image builds)
+        if: needs.detect-affected.outputs.needs_npm == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
+          # Dockerfile.local for BTC copies package .npmrc into the image for npm ci.
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> \
+            qubership-apihub-build-task-consumer/.npmrc
+          pnpm install --frozen-lockfile
+
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -166,19 +204,37 @@ jobs:
         env:
           TAG: ${{ needs.detect-affected.outputs.feature_tag }}
           OWNER: ${{ github.repository_owner }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TARGETS='${{ needs.detect-affected.outputs.oci_push_targets }}'
           OWNER_LC="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
           for target in $(echo "$TARGETS" | jq -r '.[]'); do
             case "$target" in
-              *apihub-backend*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-backend" ;;
-              *api-linter*) IMG="ghcr.io/${OWNER_LC}/qubership-api-linter-service" ;;
-              *agents-backend*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-agents-backend" ;;
-              *build-task-consumer*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-build-task-consumer" ;;
-              *apihub-ui*) IMG="ghcr.io/${OWNER_LC}/qubership-apihub-ui" ;;
-              *) echo "Unknown push target: $target"; exit 1 ;;
+              docker:build-task-consumer)
+                bash tools/ci/docker_push_npm.sh build-task-consumer \
+                  "ghcr.io/${OWNER_LC}/qubership-apihub-build-task-consumer" "$TAG"
+                ;;
+              docker:ui)
+                bash tools/ci/docker_push_npm.sh ui \
+                  "ghcr.io/${OWNER_LC}/qubership-apihub-ui" "$TAG"
+                ;;
+              *apihub-backend*)
+                bazel run --config=ci --config=go-only "$target" -- \
+                  --repository "ghcr.io/${OWNER_LC}/qubership-apihub-backend" --tag "$TAG"
+                ;;
+              *api-linter*)
+                bazel run --config=ci --config=go-only "$target" -- \
+                  --repository "ghcr.io/${OWNER_LC}/qubership-api-linter-service" --tag "$TAG"
+                ;;
+              *agents-backend*)
+                bazel run --config=ci --config=go-only "$target" -- \
+                  --repository "ghcr.io/${OWNER_LC}/qubership-apihub-agents-backend" --tag "$TAG"
+                ;;
+              *)
+                echo "Unknown push target: $target"
+                exit 1
+                ;;
             esac
-            bazel run --config=ci --config=go-only "$target" -- --repository "$IMG" --tag "$TAG"
           done
 
   e2e:
@@ -188,12 +244,12 @@ jobs:
       github.event_name == 'pull_request' &&
       needs.detect-affected.outputs.run_e2e == 'true' &&
       needs.bazel-build-push.result == 'success'
-    uses: netcracker/qubership-apihub-ci/.github/workflows/run-e2e-tests.yml@main
+    uses: ./.github/workflows/run-e2e-monorepo.yml
     with:
-      # github.repositoryUrl is git:// which often times out on runners; use HTTPS.
       compose-repository-url: https://github.com/${{ github.repository }}.git
       compose-repository-branch: ${{ github.head_ref }}
       compose-repository-compose-folder: docker-compose/apihub-generic
+      ghcr-owner: ${{ github.repository_owner }}
       postman-repository-url: https://github.com/${{ github.repository }}.git
       postman-repository-branch: ${{ github.head_ref }}
       postman-collections-list: ./qubership-apihub-postman-collections/e2e/1_1_Smoke_Portal.postman_collection.json,./qubership-apihub-postman-collections/e2e/1_3_Linter_Portal.postman_collection.json
@@ -202,7 +258,6 @@ jobs:
       apihub-ui-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'ui') && needs.detect-affected.outputs.feature_tag || 'dev' }}
       apihub-api-linter-service-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'linter') && needs.detect-affected.outputs.feature_tag || 'dev' }}
       apihub-agents-backend-image-tag: ${{ contains(fromJson(needs.detect-affected.outputs.modules), 'agents-backend') && needs.detect-affected.outputs.feature_tag || 'dev' }}
-      # External Netcracker/qubership-apihub-ui-tests — use default branch, not PR head.
       playwright-repository-branch: main
     secrets:
       APIHUB_ACCESS_TOKEN: ${{ secrets.APIHUB_ACCESS_TOKEN }}
