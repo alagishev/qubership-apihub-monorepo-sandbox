@@ -29,7 +29,7 @@
     "@lit-labs/react": "1.1.1",
     "@mui/icons-material": "5.11.9",
     "@mui/lab": "5.0.0-alpha.120",
-    "@mui/material": "5.11.10",
+    "@mui/material": "9.4.0",
     "@mui/private-theming": "5.11.9",
     "@netcracker/qubership-apihub-api-diff": "workspace:*",
     "@netcracker/qubership-apihub-api-doc-viewer": "dev",
