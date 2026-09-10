@@ -93,7 +93,7 @@
     "rehype-raw": "6.1.1",
     "remark-gfm": "3.0.1",
     "rxjs": "^7.8.1",
-    "ts-event-bus": "4.1.1",
+    "ts-event-bus": "4.2.0",
     "uuid": "^11.1.0",
     "yaml": "2.9.0"
   },
